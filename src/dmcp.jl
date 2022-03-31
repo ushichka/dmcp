@@ -1,7 +1,10 @@
+# (c) Julian Jandeleit 2022
 using MAT
 using ImageProjectiveGeometry
 using LinearAlgebra
 la = LinearAlgebra
+
+include("absoluteOrientationQuaternionHorn.jl")
 
 
 
@@ -132,8 +135,15 @@ function dmcp_alg(Kim, Pim, Idm, Kdm, Pdm, cps)
     bring_to_calibration_space(px,py,pz) = point_in_camera_space_to_world_space(px,py,pz, Pim, Kim)
     pdm_calib = pdm_camera_est .|> p->bring_to_calibration_space(p[1], p[2], p[3])
 
+    # solve absolute orientation problem between cps in world and calibration space
+    # we want the transformation from calibration space to world space
+    s, R, T = absoluteOrientationQuaternion(hcat(pdm_calib...),hcat(pdm_world...), false)
 
-    return pdm_camera, pdm_world, P, repr_err, scale_factor, cps_mat_img_world, pdm_camera_est, pdm_calib
+    # build affine transform A from individual parts
+    A = [[s*R T]; 0 0 0 1]
+
+    return A
+    #return pdm_camera, pdm_world, P, repr_err, scale_factor, cps_mat_img_world, pdm_camera_est, pdm_calib
 end
 
 
@@ -157,6 +167,7 @@ end
 di = demo_input = demo()
 
 # create input correspondences
-t1, t2, t3, t4, t5, t6, t7, t8 = dmcp_alg(di.Kth, di.Pth, di.Idm, di.Kdm, di.Pdm, di.cps)
+#t1, t2, t3, t4, t5, t6, t7, t8 = dmcp_alg(di.Kth, di.Pth, di.Idm, di.Kdm, di.Pdm, di.cps)
+A = dmcp_alg(di.Kth, di.Pth, di.Idm, di.Kdm, di.Pdm, di.cps);
 
 #t3_pose = inv([inv(di.Kth) * t3; 0 0 0 1])
