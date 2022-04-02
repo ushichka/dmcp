@@ -69,7 +69,7 @@ def make_vtk_camera(w, h, intrinsic, extrinsic, plotter):
 
 
 def capture_depth(mesh, P, K, n_rows, n_cols):
-    plotter = pv.Plotter(off_screen=False, notebook=False)
+    plotter = pv.Plotter(off_screen=True, notebook=False)
     actor = plotter.add_mesh(mesh, color="grey")
 
     E = la.inv(K) @ P[0:3, :]

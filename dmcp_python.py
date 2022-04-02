@@ -21,13 +21,13 @@ mesh = pv.read(mesh_path)
 
 plotter = pv.Plotter(off_screen=False, notebook=False)
 actor = plotter.add_mesh(mesh, color="grey")
-plotter.camera.SetPosition((0,0,0))
+#plotter.camera.SetPosition((0,0,0))
 
 # look in the +Z direction of the camera coordinate system
-plotter.camera.SetFocalPoint(0, 0, 1)
+#plotter.camera.SetFocalPoint(0, 0, 1)
 
 # the camera Y axis points down
-plotter.camera.SetViewUp(0, -1, 0)
+#plotter.camera.SetViewUp(0, -1, 0)
 
 def clicked(event):
     up = plotter.camera.GetViewUp()
@@ -41,6 +41,8 @@ def clicked(event):
     print("right ", right)
 
 plotter.track_click_position(callback=clicked,side='left', viewport=True)
+
+w, h = plotter.window_size
 
 plotter.show()
 
@@ -79,15 +81,54 @@ E = E[0:3,0:4]
 print("E \n", E)
 
 K = np.array([[526, 0, 320],[0, 526, 256],[0,0,1]])
+
+import math
+#w, h = plotter.last_image.shape
+wcx, wcy = plotter.camera.GetWindowCenter()
+
+cx =  w*  wcx/-2+float(w)/2
+cy =  h*  wcy/-2+float(h)/2
+
+# convert the focal length to view angle and set it
+view_angle = plotter.camera.GetViewAngle()
+print("va", w, h)
+
+f_x = -w / (2 * math.tan(view_angle/2.0))
+f_y = -h / (2 * math.tan(view_angle/2.0))
+
+K = np.array(  [[f_x, 0, cx],
+                [0, f_y, cy],
+                [0, 0,  1]])
+
+print("K\n",K)
+
+
 P = np.matmul(K, E)
 
 print("P \n", P)
 
 # capture photo
 from h_backproject_mesh import main as capture_depth
-from matplotlib.pyplot import imsave
 n_rows = 512
 n_cols = 640
 
+
 depth_map = capture_depth(mesh_path,P,K,n_rows,n_cols, False)
-imsave('dm.png', depth_map)
+
+# show plot
+#import matplotlib.pyplot as plt
+#plt.figure()
+#plt.imshow(depth_map)
+#plt.show()
+
+# save as array
+np.savetxt('export/dm.csv', depth_map, delimiter=",")
+
+# save as image
+from PIL import Image
+im = Image.fromarray(depth_map)
+im = im.convert('RGBA')
+im.save('export/dm.png', "PNG")
+
+print("DATA SAVED TO export/")
+print("closing program...")
