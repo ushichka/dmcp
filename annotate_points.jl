@@ -4,36 +4,43 @@ using DelimitedFiles
 
 ## read input
 dm = readdlm("data/dm.csv", ',')[end:-1:1, 1:end]'
+im = readdlm("data/im.csv", ';')[end:-1:1, 1:end-1]' # thermal images have one column to many...
 
 ## start drawing
 fig = Figure()
-ax1 = Axis(fig[1, 1:2])
-ax2 = Axis(fig[2, 1:2])
+ax1 = Axis(fig[1, 1:2], yrectzoom=false, xrectzoom=false, aspect=dm |> size |> s -> s[1] / s[2])
+ax2 = Axis(fig[2, 1:2], yrectzoom=false, xrectzoom=false, aspect=im |> size |> s -> s[1] / s[2])
 
-pts = Matrix{Float64}(undef, 0, 2)
-#push!(pts, [0, 1])
-#push!(pts, [4, 2])
-#pts = hcat(pts...)' |> x -> convert(Matrix{Float64}, x)
+ptsDM = Matrix{Float64}(undef, 0, 2)
+ptsIM = Matrix{Float64}(undef, 0, 2)
 
-ptsO = Observable(pts)
+# plot on top
+ptsDMO = Observable(ptsDM)
+hmapDM = heatmap!(ax1, dm)
+scatDM = scatter!(ax1, ptsDMO, marker=:xcross, glowwidth=15, color=:firebrick, markersize=25)
+# plot on bottom
+#ptsU = Observable
+ptsIMO = Observable(ptsIM)
+hmapIM = heatmap!(ax2, im)
+scatIM = scatter!(ax2, ptsIMO, marker=:xcross, glowwidth=15, color=:firebrick, markersize=25)
 
-sdm = heatmap!(ax1, dm)
-s1 = scatter!(ax1, ptsO)
+function setLabel(ax, ptsO, mpos)
+    text!(ax, size(ptsO[])[1] |> string, position=(mpos[1] + 10, mpos[2] + 10), space=:data, textsize=25, glowwidth=15, color=:ivory, font="Julia Mono")
+end
 
 on(events(fig).mousebutton, priority=0) do event
-    test = event
-    if event.button == Mouse.left
+    if event.button == Mouse.left && (ispressed(ax1.scene, Keyboard.s) || ispressed(ax2.scene, Keyboard.s))
         if event.action == Mouse.press
-            if mouseover(ax1.scene, s1) # depth map
-
-            else # image
-
+            if mouseover(ax1.scene, hmapDM) # depth map
+                mpos = mouseposition(ax1.scene)
+                ptsDMO[] = vcat(ptsDMO[], [mpos[1] mpos[2]])
+                setLabel(ax1, ptsDMO, mpos)
+            elseif mouseover(ax2.scene, hmapIM) # image
+                mpos = mouseposition(ax2.scene)
+                ptsIMO[] = vcat(ptsIMO[], [mpos[1] mpos[2]])
+                setLabel(ax2, ptsIMO, mpos)
+            else # clicked somewhere else
             end
-            mpos = mouseposition(ax1.scene)
-            println("mouse presssed at $mpos")
-            # do something
-            #ptsO[] = rand(Float64, (3, 2)) * 500
-            ptsO[] = vcat(ptsO[], [mpos[1] mpos[2]])
         else
             # do something else when the mouse button is released
         end
@@ -41,5 +48,8 @@ on(events(fig).mousebutton, priority=0) do event
     # Do not consume the event
     return Consume(false)
 end
+
+println("press ctrl+shift+left_mouse to reset window")
+println("hold s and click to insert point")
 
 fig
