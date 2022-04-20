@@ -29,7 +29,7 @@ function setLabel(ax, ptsO, mpos)
 end
 
 on(events(fig).mousebutton, priority=0) do event
-    if event.button == Mouse.left && (ispressed(ax1.scene, Keyboard.s) || ispressed(ax2.scene, Keyboard.s))
+    if event.button == Mouse.left
         if event.action == Mouse.press
             if mouseover(ax1.scene, hmapDM) # depth map
                 mpos = mouseposition(ax1.scene)
@@ -53,3 +53,8 @@ println("press ctrl+shift+left_mouse to reset window")
 println("hold s and click to insert point")
 
 fig
+
+## write annotated results
+# concat to matrix rows: imx imy dmx dmy
+# cps = hcat(ptsIMO[]..., ptsDMO[]...)
+# writedlm( "data/cps.csv",  A, ',')

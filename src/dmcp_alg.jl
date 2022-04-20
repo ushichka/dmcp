@@ -10,12 +10,12 @@ include("absoluteOrientationQuaternionHorn.jl")
 
 # cps matrix with each row a correspondence. Expects rows [point2D point3D] = [u v X Y Z]
 # returns calibrated camera pinhole projection matrix P
-function estimate_projection_matrix_dlt(cps) 
+function estimate_projection_matrix_dlt(cps)
 
     # build knows system matrix 2k x 12 A that determines coefficients
     rows = []
     for row in eachrow(cps)
-    
+
         # 2D Point
         u = row[1]
         v = row[2]
@@ -25,25 +25,25 @@ function estimate_projection_matrix_dlt(cps)
         Y = row[4]
         Z = row[5]
 
-        push!(rows, [-X -Y -Z -1 0 0 0 0 u*X u*Y u*Z u])
-        push!(rows, [0 0 0 0 -X -Y -Z -1 v*X v*Y v*Z v] )
+        push!(rows, [-X -Y -Z -1 0 0 0 0 u * X u * Y u * Z u])
+        push!(rows, [0 0 0 0 -X -Y -Z -1 v * X v * Y v * Z v])
     end
     A = vcat(rows...)
 
     # solve homogeneous linear system Ax = 0. x Represent the coefficients of the camera matrix
     # solve in least squares sense regarding reprojection error using SVD 
     U, S, V = la.svd(A)
-    P = reshape(V[:, 12], 4,3) |> la.transpose
+    P = reshape(V[:, 12], 4, 3) |> la.transpose
 
     return P
 end
 
 # as in estimate_projection_matrix_dlt, with its result P
-function reprojection_error(P,cps)
-    world_pts = cps |> eachrow .|> row->[row[3], row[4], row[5]]
+function reprojection_error(P, cps)
+    world_pts = cps |> eachrow .|> row -> [row[3], row[4], row[5]]
     reprojected_points = []
     for pt in world_pts
-        push!(reprojected_points, P*[pt; 1] |> p->p/p[end] |> p -> p[1:end-1])
+        push!(reprojected_points, P * [pt; 1] |> p -> p / p[end] |> p -> p[1:end-1])
     end
 
     errors = []
@@ -51,7 +51,7 @@ function reprojection_error(P,cps)
         p_cps = cps[i, 1:2]
         p_rep = reprojected_points[i]
 
-        err = abs.(p_cps-p_rep) |> sum
+        err = abs.(p_cps - p_rep) |> sum
         push!(errors, err)
     end
 
@@ -77,22 +77,22 @@ point_in_camera_space_to_world_space(px::Float64, py::Float64, pz::Float64, P, K
 # -- helper methods for transformation estimation --
 
 # estimates how much space 2 is larger than space 1 for camera matrices P1 and P2
-function estimate_scaling(K1, P1, K2, P2) 
+function estimate_scaling(K1, P1, K2, P2)
     E1 = [inv(K1) * P1; 0 0 0 1]
     E2 = [inv(K2) * P2; 0 0 0 1]
 
     # ref: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati/417813
-    sv_1 = [norm(E1[1:3,1]) norm(E1[1:3,2]) norm(E1[1:3,3])] # vector of each norm of column in rotation matrix
-    sv_2 = [norm(E2[1:3,1]) norm(E2[1:3,2]) norm(E2[1:3,3])]
+    sv_1 = [norm(E1[1:3, 1]) norm(E1[1:3, 2]) norm(E1[1:3, 3])] # vector of each norm of column in rotation matrix
+    sv_2 = [norm(E2[1:3, 1]) norm(E2[1:3, 2]) norm(E2[1:3, 3])]
 
-    scale_factor = norm(sv_2)/norm(sv_1)
+    scale_factor = norm(sv_2) / norm(sv_1)
     return scale_factor
 end
 
-function point_in_world_space_to_camera_space(K,P, point,scale_factor)
+function point_in_world_space_to_camera_space(K, P, point, scale_factor)
     E = [inv(K) * P; 0 0 0 1]
-    pc = E*[point; 1]
-    pc = pc/pc[end]
+    pc = E * [point; 1]
+    pc = pc / pc[end]
     return pc[1:end-1] * scale_factor
 end
 
@@ -123,22 +123,22 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
 
     # estimate scaling between camera calibration space and world space
     scale_factor = estimate_scaling(Kim, P, Kim, Pim)
-    
+
     # bring cps from world to camera_space (of the camera that took the image)
     bring_to_camera_space_est(p) = point_in_world_space_to_camera_space(Kim, P, p, scale_factor)
     pdm_camera_est = pdm_world .|> bring_to_camera_space_est
 
     # bring cps from camera space to calibration space
     # this step works because P and Pim describe the same camera and thus have the same camera space. how ever their "world space differs" (calibration vs world space)
-    bring_to_calibration_space(px,py,pz) = point_in_camera_space_to_world_space(px,py,pz, Pim, Kim)
-    pdm_calib = pdm_camera_est .|> p->bring_to_calibration_space(p[1], p[2], p[3])
+    bring_to_calibration_space(px, py, pz) = point_in_camera_space_to_world_space(px, py, pz, Pim, Kim)
+    pdm_calib = pdm_camera_est .|> p -> bring_to_calibration_space(p[1], p[2], p[3])
 
     # solve absolute orientation problem between cps in world and calibration space
     # we want the transformation from calibration space to world space
-    s, R, T = absoluteOrientationQuaternion(hcat(pdm_calib...),hcat(pdm_world...), false)
+    s, R, T = absoluteOrientationQuaternion(hcat(pdm_calib...), hcat(pdm_world...), false)
 
     # build affine transform A from individual parts
-    A = [[s*R T]; 0 0 0 1]
+    A = [[s * R T]; 0 0 0 1]
 
     return A
     #return pdm_camera, pdm_world, P, repr_err, scale_factor, cps_mat_img_world, pdm_camera_est, pdm_calib
