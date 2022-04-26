@@ -102,7 +102,6 @@ end
 # Pim in calibration space
 function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
 
-
     # -- single pose calibration -- 
 
     # bring cps from depth map to camera space dm (3D)

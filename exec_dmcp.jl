@@ -1,7 +1,8 @@
+include("src/dmcp_alg.jl")
 using ArgParse
 
 function parse_commandline()
-    Idm, Kdm, Pdm
+
     s = ArgParseSettings()
     
     @add_arg_table s begin
@@ -50,8 +51,12 @@ dmIm = readdlm(parsed_args["dmIm"], ',')[end:-1:1, 1:end]'
 
 cps = readdlm(parsed_args["cps"], ',')
 
-println("executing algorithm")
-transform = exec_dmcp(imK, imP, dmIm, dmk, dmP, cps)
+# convert types
+dmIm = convert(Matrix{Float32}, dmIm)
+cps = convert(Matrix{Float64}, cps)
 
-println("writing to $(parse_args["out"])")
+println("executing algorithm")
+transform = exec_dmcp(imK, imP, dmIm, dmK, dmP, cps)
+
+println("writing to $(parsed_args["out"])")
 writedlm(parsed_args["out"], transform, ',') 

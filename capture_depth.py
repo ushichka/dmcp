@@ -16,7 +16,9 @@ parser = argparse.ArgumentParser(description='create depth map from mesh')
 #parser.add_argument('mesh_path', metavar='N', type=str, nargs='?', default="C:/Users/Julian/Nextcloud/Uni/Depth for Thermal Images/data_raw/lidar/lidar_roi.ply",
 #                    help='the path for mesh file')
 parser.add_argument('--mesh')
-parser.add_argument('--out')
+parser.add_argument('--outIm')
+parser.add_argument('--outK')
+parser.add_argument('--outP')
 
 args = parser.parse_args()
 ##
@@ -138,12 +140,14 @@ depth_map = capture_depth(mesh_path, P, K, n_rows, n_cols, False)
 # plt.show()
 
 # save as array
-np.savetxt(args.out, depth_map, delimiter=",")
+np.savetxt(args.outIm, depth_map, delimiter=",")
+np.savetxt(args.outK, K, delimiter=",")
+np.savetxt(args.outP, P, delimiter=",")
 
 # save as image
 #im = Image.fromarray(depth_map)
 #im = im.convert('RGBA')
 #im.save('data/dm.png', "PNG")
 
-print("DATA SAVED TO export/")
+print("DATA SAVED")
 print("closing program...")
