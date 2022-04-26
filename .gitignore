@@ -2,3 +2,4 @@ build/
 __pycache__
 export
 data
+lidar_roi.ply
