@@ -20,6 +20,3 @@ julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/
   
 ## Interaction
 Explained [here](https://makie.juliaplots.org/v0.15.2/examples/layoutables/axis/)
-
-## known issues
- - annotated points sometimes "jump", however they are stored correctly and will jump back to correct position eventually. It likely is an issue in the Makie / Observable library
