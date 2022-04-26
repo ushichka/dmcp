@@ -1,4 +1,5 @@
 # (c) Julian Jandeleit 2022
+using MAT # to read demo
 using LinearAlgebra
 la = LinearAlgebra
 

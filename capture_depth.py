@@ -12,16 +12,17 @@ jl = Julia(compile='min')
 
 
 # cli args
-
 parser = argparse.ArgumentParser(description='create depth map from mesh')
-parser.add_argument('mesh_path', metavar='N', type=str, nargs='?', default="C:/Users/Julian/Nextcloud/Uni/Depth for Thermal Images/data_raw/lidar/lidar_roi.ply",
-                    help='the path for mesh file')
+#parser.add_argument('mesh_path', metavar='N', type=str, nargs='?', default="C:/Users/Julian/Nextcloud/Uni/Depth for Thermal Images/data_raw/lidar/lidar_roi.ply",
+#                    help='the path for mesh file')
+parser.add_argument('--mesh')
+parser.add_argument('--out')
 
 args = parser.parse_args()
 ##
 
 # demo data from thesis
-mat = scipy.io.loadmat("demo/dmcp_inputs_demo.mat")
+#mat = scipy.io.loadmat("demo/dmcp_inputs_demo.mat")
 
 # call julia implementation
 # jl.include("src/dmcp_alg.jl")
@@ -31,7 +32,7 @@ mat = scipy.io.loadmat("demo/dmcp_inputs_demo.mat")
 # print(A)
 
 # show mesh
-mesh_path = args.mesh_path
+mesh_path = args.mesh
 mesh = pv.read(mesh_path)
 
 plotter = pv.Plotter(off_screen=False, notebook=False)
@@ -137,12 +138,12 @@ depth_map = capture_depth(mesh_path, P, K, n_rows, n_cols, False)
 # plt.show()
 
 # save as array
-np.savetxt('data/dm.csv', depth_map, delimiter=",")
+np.savetxt(args.out, depth_map, delimiter=",")
 
 # save as image
-im = Image.fromarray(depth_map)
-im = im.convert('RGBA')
-im.save('data/dm.png', "PNG")
+#im = Image.fromarray(depth_map)
+#im = im.convert('RGBA')
+#im.save('data/dm.png', "PNG")
 
 print("DATA SAVED TO export/")
 print("closing program...")

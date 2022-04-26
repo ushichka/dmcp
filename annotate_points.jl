@@ -93,16 +93,18 @@ println("executing...")
 println("press ctrl+shift+left_mouse to reset window")
 println("hold s and click to insert point")
 
-gl_screen = fig |> display
-wait(gl_screen)
-
-if size(ptsDMO[]) == size(ptsIMO[])
-    println("writing cps to $(parsed_args["out"])")
-    cps = hcat(ptsDMO[], ptsIMO[])
-    writedlm(parsed_args["out"], cps, ',')    
-else
-    println("cps must have same length")
-    exit(1)
+while true
+    gl_screen = fig |> display
+    wait(gl_screen)
+    if size(ptsDMO[]) == size(ptsIMO[])
+        println("writing cps to $(parsed_args["out"])")
+        cps = hcat(ptsDMO[], ptsIMO[])
+        writedlm(parsed_args["out"], cps, ',')    
+        exit(0)
+    else
+        println("cps must have same length")
+        exit(1)
+    end
 end
 
 println(ptsDMO[])

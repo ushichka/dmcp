@@ -1,6 +1,6 @@
 ## Usage
- - python dmcp_python.py LIDAR_PATH
- - julia --project=. annotate_points.jl (may take some time to start, especially first start)
+ 1. python -m capture_depth --mesh [LIDARFILE] --out [OUTFILE]
+ 2. julia --project=. annotate_points.jl -dm [DM.csv] -im [IM.csv] (may take some time to start, especially first start)
 
 ## Setup Dependencies
  -  python: python -m ensurepip, python -m pip install X
