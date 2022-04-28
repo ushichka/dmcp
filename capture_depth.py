@@ -108,16 +108,13 @@ wcx, wcy = plotter.camera.GetWindowCenter()
 cx = w * wcx/-2+float(w)/2
 cy = h * wcy/-2+float(h)/2
 
-print("wcs", wcx, wcy)
-print("dims", w,h)
-print("cp",cx,cy)
-
 # convert the focal length to view angle and set it
 view_angle = plotter.camera.GetViewAngle()
-print("va", w, h)
+print("va", view_angle)
 
-f_x = -w / (2 * math.tan(view_angle/2.0))
-f_y = -h / (2 * math.tan(view_angle/2.0))
+# it was (2* ,math.tan...) but 1*... seems to work
+f_x = -w / (1 * math.tan(view_angle/2.0))
+f_y = -h / (1 * math.tan(view_angle/2.0))
 
 K = np.array([[f_x, 0, cx],
               [0, f_y, cy],
