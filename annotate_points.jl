@@ -64,7 +64,7 @@ function addpoint(ax, point, points)
 end
 
 function setLabel(ax, point, mpos, label)
-    text!(ax, label, position=(mpos[1] + 10, mpos[2] + 10), space=:data, textsize=25, glowwidth=15, color=:ivory, font="Julia Mono")
+    text!(ax, label, position=(mpos[1] + 10, mpos[2] + 10), space=:data, textsize=50, glowwidth=15, color=:ivory, font="Julia Mono")
 end
 
 on(events(fig).mousebutton, priority=0) do event
