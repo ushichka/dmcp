@@ -1,6 +1,8 @@
 ## Programming languages to install 
 - python (Recommend using a virtual environment with <=3.9)
-- julia (Tested with Julia 1.7.2, remember to add Julia to your system's path)
+- julia (Tested with Julia 1.7.2)
+  - ALL OS installation: **Remember to add Julia to your system's path**
+  - Windows users may want to restart their systems just to ensure the Path is updated (do this also if Python later throws an error saying the ```julia``` module is not found)
 
 ## Setup Dependencies
  -  python: python -m ensurepip, python -m pip install X
@@ -43,10 +45,15 @@ a 3D object where pixels indicate depth from the camera.
     * This will open up a PyVista 3D visualisation window. Navigate using the interface till you have a view that broadly matches that of your experimental image.
     * Once you're happy with the match, you can close the window. An output depth-map image will be saved along with the camera intrinsics and projection matrix as csv files. 
 
-#### Step 2
-
- *Type*
+#### Step 2: Annotating matching points between depth map and your camera image
+* Open up/stay in the ```dmcp``` directory
+* Run the annotation routine with the command below. This will open a window with the two images. The depth map is on top, and your image is at the bottom.
+(Especially the first time you run this command it may take a few seconds to a minute to compile. This is normal)
+```
 julia --project=. annotate_points.jl --dm data/dmIm.csv  --im demo/imIm.csv --out data/cps.csv
+```
+
+#### Step 3: Run the camera-mesh alignment
 julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/dmK.csv --dmP data/dmP.csv --dmIm data/dmIm.csv --cps data/cps.csv --out data/transform.csv
 ```
 
@@ -59,6 +66,9 @@ julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/
   
 ## Interaction
 Explained [here](https://makie.juliaplots.org/v0.15.2/examples/layoutables/axis/)
+
+BUGS:
+* Fix the last column removal in line 39 of ```annotate_points.jl```
 
 TODO:
 * add requirements file 
