@@ -52,10 +52,15 @@ a 3D object where pixels indicate depth from the camera.
 ```
 julia --project=. annotate_points.jl --dm data/dmIm.csv  --im demo/imIm.csv --out data/cps.csv
 ```
+* Click on at least 8 points in both views which correspond to each other. You need to do it in the correct order ('1' in the depth map, and then the same point in the camera image). You **cannot** correct a mouse click as of now. Re-type the command if you made a mistake. 
+* When you're done, close the plot window. The output file will be in the folder.
 
 #### Step 3: Run the camera-mesh alignment
+* Stay in the ```dmcp``` folder and run the alignment.
+```
 julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/dmK.csv --dmP data/dmP.csv --dmIm data/dmIm.csv --cps data/cps.csv --out data/transform.csv
 ```
+* The final output is a 'transform' csv file with a 4x4 matrix in it. Multiply this transform matrix to any 3D points obtained from camera 3d tracking to bring the camera points into the mesh coordinate system
 
 
 ## Usage
@@ -65,17 +70,13 @@ julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/
 
   
 ## Interaction
-Explained [here](https://makie.juliaplots.org/v0.15.2/examples/layoutables/axis/)
+Explained [here-FIXLINK](https://makie.juliaplots.org/v0.15.2/examples/layoutables/axis/)
 
 BUGS:
 * Discrepancy in the view seen by user just before closing window and the saved depth map file
 * Last column removal in line 39 of ```annotate_points.jl``` leads to issues in plotting
 
 TODO:
+* FeatureRequest: add hold s and click in ```annotate_points.jl```
+* Update the Julia plotting interface help link
 * add requirements file 
-* which version of Python (3.9) is supported?
-* add official download/installation link for julia (https://julialang.org/downloads/). For windows users - check 'Add Julia to Path'
-* Fix order of required packages, and then the code to run ( ```import julia\n julia.install()```)
-* Tell user to go to the project directory (dmcp)
-* Separate the two Julia commands, and also tell the user how to exit from the dependency manager
-* 
