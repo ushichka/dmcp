@@ -75,6 +75,7 @@ Explained [here-FIXLINK](https://makie.juliaplots.org/v0.15.2/examples/layoutabl
 BUGS:
 * Discrepancy in the view seen by user just before closing window and the saved depth map file
 * Last column removal in line 39 of ```annotate_points.jl``` leads to issues in plotting
+* Julia csv sep file
 
 TODO:
 * FeatureRequest: add hold s and click in ```annotate_points.jl```

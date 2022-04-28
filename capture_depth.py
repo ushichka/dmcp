@@ -108,6 +108,10 @@ wcx, wcy = plotter.camera.GetWindowCenter()
 cx = w * wcx/-2+float(w)/2
 cy = h * wcy/-2+float(h)/2
 
+print("wcs", wcx, wcy)
+print("dims", w,h)
+print("cp",cx,cy)
+
 # convert the focal length to view angle and set it
 view_angle = plotter.camera.GetViewAngle()
 print("va", w, h)
@@ -127,8 +131,8 @@ P = np.matmul(K, E)
 print("P \n", P)
 
 # capture photo
-n_rows = 512
-n_cols = 640
+n_rows = h
+n_cols = w
 
 
 depth_map = capture_depth(mesh_path, P, K, n_rows, n_cols, False)
