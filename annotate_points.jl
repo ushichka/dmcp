@@ -36,7 +36,7 @@ using DelimitedFiles
 ## read input
 println("reading input")
 dm = readdlm(parsed_args["dm"], parsed_args["dmsep"])[end:-1:1, 1:end]'
-im = readdlm(parsed_args["im"], parsed_args["imsep"])[end:-1:1, 1:end-1]' # thermal images have one column to many...
+im = readdlm(parsed_args["im"], parsed_args["imsep"])[end:-1:1, 1:end]' # thermal images have one column to many...
 
 ## start drawing
 println("preparing visualization")
