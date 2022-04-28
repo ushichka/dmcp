@@ -1,23 +1,70 @@
-## Usage
- 1. python -m capture_depth --mesh [LIDARFILE] --out [OUTFILE]
- 2. julia --project=. annotate_points.jl -dm [DM.csv] -im [IM.csv] (may take some time to start, especially first start)
- 3. julia --project=. exec_dmcp.jl [OPTIONS]
-### Example
-```bash
-python -m capture_depth --mesh demo/lidar_roi.ply --outIm data/dmIm.csv --outK data/dmK.csv --outP data/dmP.csv
-julia --project=. annotate_points.jl --dm data/dmIm.csv  --im demo/imIm.csv --out data/cps.csv
-julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/dmK.csv --dmP data/dmP.csv --dmIm data/dmIm.csv --cps data/cps.csv --out data/transform.csv
-```
+## Programming languages to install 
+- python (Recommend using a virtual environment with <=3.9)
+- julia (Tested with Julia 1.7.2, remember to add Julia to your system's path)
 
 ## Setup Dependencies
  -  python: python -m ensurepip, python -m pip install X
     -  numpy
     -  scipy
     -  pyvista (depends on vtk, pip issue on python 3.10. 3.9 works)
-    -  julia
-       -  in python (once): import julia\n julia.install()
- - julia
-   - in julia REPL: ]activate . and ]instantiate 
+    -  julia (allows cross-talk between python and julia)
+
+## Run these commands after installing the required packages
+
+### Python 
+Open up Python in your virtual environment and run these two commands.
+
+```
+>>> import julia
+>>> julia.install()
+```
+
+### Julia
+* Open a command prompt/bash window
+* Move to the ```dmcp``` directory
+```
+>>> ] activate .
+>>> instantiate
+```
+* Press on Backspace to return to the Julia coding space and exit with ```exit()```
+
+### Example
+
+#### Step 1: Create a depth map 
+We'll use the ```capture_depth``` module to create a depth map. The depth map is a 2D projection of 
+a 3D object where pixels indicate depth from the camera.
+
+* To start you need the volume's mesh as a .ply file
+* Open a command prompt/bash window and move to the ```dmcp``` directory
+* Type the following command
+ ```bash
+ python -m capture_depth --mesh <meshfile_path_here> --outIm <path_imagefilepathhere>.csv --outK <path_camera_intrinsics>.csv --outP <path_projectionmat>.csv
+ ```
+    * This will open up a PyVista 3D visualisation window. Navigate using the interface till you have a view that broadly matches that of your experimental image.
+    * Once you're happy with the match, you can close the window. An output depth-map image will be saved along with the camera intrinsics and projection matrix as csv files. 
+
+#### Step 2
+
+ *Type*
+julia --project=. annotate_points.jl --dm data/dmIm.csv  --im demo/imIm.csv --out data/cps.csv
+julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/dmK.csv --dmP data/dmP.csv --dmIm data/dmIm.csv --cps data/cps.csv --out data/transform.csv
+```
+
+
+## Usage
+ 1. python -m capture_depth --mesh [LIDARFILE] --out [OUTFILE]
+ 2. julia --project=. annotate_points.jl -dm [DM.csv] -im [IM.csv] (may take some time to start, especially first start)
+ 3. julia --project=. exec_dmcp.jl [OPTIONS]
+
   
 ## Interaction
 Explained [here](https://makie.juliaplots.org/v0.15.2/examples/layoutables/axis/)
+
+TODO:
+* add requirements file 
+* which version of Python (3.9) is supported?
+* add official download/installation link for julia (https://julialang.org/downloads/). For windows users - check 'Add Julia to Path'
+* Fix order of required packages, and then the code to run ( ```import julia\n julia.install()```)
+* Tell user to go to the project directory (dmcp)
+* Separate the two Julia commands, and also tell the user how to exit from the dependency manager
+* 
