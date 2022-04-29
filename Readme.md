@@ -42,7 +42,9 @@ a 3D object where pixels indicate depth from the camera.
  ```bash
  python -m capture_depth --mesh <meshfile_path_here> --outIm <path_imagefilepathhere>.csv --outK <path_camera_intrinsics>.csv --outP <path_projectionmat>.csv
  ```
-    * This will open up a PyVista 3D visualisation window. Navigate using the interface till you have a view that broadly matches that of your experimental image.
+    * This will open up a PyVista 3D visualisation window.
+	* **Make the interface FULLSCREEN (important as this is the image that will be save)**
+	* Navigate using the interface till you have a view that broadly matches that of your experimental image (it's useful having the experimental image on another window for comparison).
     * Once you're happy with the match, you can close the window. An output depth-map image will be saved along with the camera intrinsics and projection matrix as csv files. 
 
 #### Step 2: Annotating matching points between depth map and your camera image
@@ -56,7 +58,7 @@ julia --project=. annotate_points.jl --dm data/dmIm.csv  --im demo/imIm.csv --ou
 * When you're done, close the plot window. The output file will be in the folder.
 
 #### Step 3: Run the camera-mesh alignment
-* Stay in the ```dmcp``` folder and run the alignment.
+* Stay in the ```dmcp``` folder and run the alignment. Type the following into your command prompt/bash window
 ```
 julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/dmK.csv --dmP data/dmP.csv --dmIm data/dmIm.csv --cps data/cps.csv --out data/transform.csv
 ```
@@ -76,10 +78,9 @@ BUGS:
 * Last column removal in line 39 of ```annotate_points.jl``` leads to issues in plotting
 * Julia csv sep file
 
-FIXED_BUGS (to be reviewed):
-* Discrepancy in the view seen by user just before closing window and the saved depth map file
-
 TODO:
+* Make all 3 steps follow naturally using a common Python script
 * FeatureRequest: add hold s and click in ```annotate_points.jl```
 * Update the Julia plotting interface help link
 * add requirements file 
+
