@@ -81,6 +81,7 @@ BUGS:
 TODO:
 * Make all 3 steps follow naturally using a common Python script
 * FeatureRequest: add hold s and click in ```annotate_points.jl```
+* Implement correspondence annotation between the 3D mesh view and the experimental image (not 2D depth map and experimental image)
 * Update the Julia plotting interface help link
 * add requirements file 
 
