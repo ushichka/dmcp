@@ -47,6 +47,27 @@ a 3D object where pixels indicate depth from the camera.
 	* Navigate using the interface till you have a view that broadly matches that of your experimental image (it's useful having the experimental image on another window for comparison).
     * Once you're happy with the match, you can close the window. An output depth-map image will be saved along with the camera intrinsics and projection matrix as csv files. 
 
+#### Step 2(v2) : Annotating matching points between mesh and camera image
+* Open up/stay in the ```dmcp``` directory
+* Run the annotation routine with the command below. This will open two windows: a 3D mesh visualisation and a 2D image plot. 
+
+```
+>>> python -m mesh_and_image --mesh <meshfile_path_here> --image <imagefile_here> --output_path <output_pathhere>
+```
+* If in doubt, type ```python -m mesh_and_image --h``` to get help on the arguments and their defaults.
+* The input image file can be a csv file or a png/jpeg file.
+
+**Mesh point annotation**
+* Move through the 3d mesh visualisation using a combination of your mouse wheel, Ctrl+C and the left button. When you want to annotate, 
+press 'P' on your keyboard and the closest 3D point over your mouse is annotated. A succesfully annotated point is seen as a small red sphere with 
+the point number next to it.
+* *Warning: be sure that your mouse is over a point. Zoom in if necessary*
+**Image point annotation**
+* Zoom in/out using the matplotlib tools on the top left. When you have a point to annotate, right-click. A star should appear with the point number next to it. 
+* *Attention: Sometimes the appearance may happen only once you press the 'Home' button, or move your mouse away from the clicked point. Re-sizing the window also helps*
+* When done with annotations
+
+
 #### Step 2: Annotating matching points between depth map and your camera image
 * Open up/stay in the ```dmcp``` directory
 * Run the annotation routine with the command below. This will open a window with the two images. The depth map is on top, and your image is at the bottom.
