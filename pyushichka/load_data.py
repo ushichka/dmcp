@@ -7,6 +7,7 @@ Created on Mon Aug 30 21:30:47 2021
 
 import os
 import numpy as np
+from pathlib import Path
 from scipy.io import loadmat
 
 
@@ -14,10 +15,9 @@ def loadCalibration(i, data_root):
     """ Uses calibration round 1
         Usage: from pyushichka import loadCalibration
     """
-    data_root = data_root + os.sep + os.sep # otherwise basename might not work
-    date = os.path.basename(os.path.dirname(data_root))
-    path_dltCoefs = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round1"+os.sep+f"{date}_round1_1pt1wandscore_dltCoefs.csv"
-    path_easyWand = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round1" + os.sep + f"{date}_round1_1pt1wandscore_easyWandData.mat"
+    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round1" 
+    path_dltCoefs = list(Path(path_calib_out).rglob('*_dltCoefs.csv'))[-1] # use last for legacy reasons
+    path_easyWand = list(Path(path_calib_out).rglob('*_easyWandData.mat'))[-1]
     #extractIntrinsics()
     #print(date)
     #print(path_easyWand)
@@ -29,8 +29,8 @@ def loadCalibration(i, data_root):
     
     #print(file_easyWand.principalPoints)
 
-    K = extractIntrinsics(0, file_easyWand)
-    P = extractProjection(0, path_dltCoefs)
+    K = extractIntrinsics(i, file_easyWand)
+    P = extractProjection(i, path_dltCoefs)
 
     return K,P
     #print(K)
@@ -57,7 +57,7 @@ def extractProjection(i, path_dltCoefs):
                  delimiter=",", dtype=np.float32)
     
     P = np.append(arr[:,i],[1])
-    P = np.reshape(P,(4,3)).T
+    P = np.reshape(P,(3,4))
 
     #np.set_printoptions(precision=3, suppress=True)
 

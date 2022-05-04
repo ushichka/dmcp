@@ -85,3 +85,14 @@ TODO:
 * Update the Julia plotting interface help link
 * add requirements file 
 
+## Ushichka-Interface
+We included the python module ```pyushichka``` for easy experimentation with the ushichka dataset.
+You can read calibration data (intrinsics _K_ and projection matrix _P_) for each camera _(0,1,2)_.
+
+Example:
+```python
+from pyushichka import loadCalibration
+cam = 1 # second camera
+K, P = loadCalibration(cam, "data/ushichka/2018-08-18") # 2018-08-18 is the recording of a specific night
+
+```
