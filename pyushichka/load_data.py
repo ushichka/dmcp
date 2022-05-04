@@ -10,6 +10,15 @@ import numpy as np
 from pathlib import Path
 from scipy.io import loadmat
 
+def loadImage(camera,image, data_root):
+    path_images = data_root + os.sep + "image" + os.sep + "raw_images"+ os.sep
+    path_img = list(Path(path_images).rglob(f"*K{camera}*512x640shape.csv"))[image]
+    
+    im = np.loadtxt(path_img,
+                 delimiter=",", dtype=np.float32)
+    return im, path_img
+    
+
 
 def loadCalibration(i, data_root):
     """ Uses calibration round 1
