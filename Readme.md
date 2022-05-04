@@ -96,6 +96,11 @@ julia --project=. exec_dmcp.jl --imK demo/imK.csv --imP demo/imP.csv --dmK data/
 Explained [here-FIXLINK](https://makie.juliaplots.org/v0.15.2/examples/layoutables/axis/)
 
 BUGS:
+* AnnotateV2 image disappearing instantly (Linux, Fedora 35)
+  - Threading leads to sequential opening
+* Image points not Shown directly
+
+FIXED:
 * Last column removal in line 39 of ```annotate_points.jl``` leads to issues in plotting
 * Julia csv sep file
 
