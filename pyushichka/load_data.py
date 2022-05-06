@@ -11,6 +11,7 @@ from pathlib import Path
 from scipy.io import loadmat
 
 def loadImage(camera,image, data_root):
+    camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
     path_images = data_root + os.sep + "image" + os.sep + "raw_images"+ os.sep
     path_img = list(Path(path_images).rglob(f"*K{camera}*512x640shape.csv"))[image]
     

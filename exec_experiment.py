@@ -1,0 +1,69 @@
+import argparse
+import os
+import numpy as np
+import subprocess
+import hashlib
+from pyushichka.load_data import loadCalibration, loadImage
+import shutil
+
+parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
+parser.add_argument('--dir', help="folder where data belonging to experiment gets stored")
+parser.add_argument('--mesh', help="the mesh file to align to")
+parser.add_argument('--recording', help="root folder (date) of ushichka recording")
+parser.add_argument('--cam', help="index of camera to use")
+parser.add_argument('--start', default=1)
+
+args = parser.parse_args()
+
+cam = int(args.cam)
+recording = args.recording
+mesh_path = args.mesh
+dir = args.dir
+start=int(args.start)
+
+# dir paths
+## lidar md5 hash
+path_lidar_hash = dir + os.sep + "lidar_hash.md5"
+## captured images for depth map
+path_dmIm = dir + os.sep + "dmIm.csv"
+path_dmK = dir + os.sep + "dmK.csv"
+path_dmP = dir + os.sep + "dmP.csv"
+## annotation paths
+path_imIm = dir + os.sep + "imIm.csv"
+path_cps = dir + os.sep + "cps.csv"
+## alignment path
+path_imK = dir + os.sep + "imK.csv"
+path_imP = dir + os.sep + "imP.csv"
+path_transform = dir + os.sep + "transform.csv"
+
+# make sure dir exists
+dir = args.dir
+if not os.path.isdir(dir):
+    os.makedirs(dir)
+
+# read image from ushichka and move to experiment dir
+img, im_path_orig = loadImage(cam, 0, recording)
+shutil.copyfile(im_path_orig, path_imIm)
+
+# create im calibration files
+K, P = loadCalibration(cam, recording)
+np.savetxt(path_imK, K, fmt='%4.6f', delimiter=',')
+np.savetxt(path_imP, P, fmt='%4.6f', delimiter=',')
+
+# store hash of lidar file for reference
+lidar_hash = hashlib.md5(open(mesh_path,'rb').read()).hexdigest()
+with open(path_lidar_hash, "w") as hashfile:
+    hashfile.write(f"{lidar_hash}\n")
+
+
+# capture depth map
+if start <= 1:
+    subprocess.run(["python", "-m", "capture_depth", "--mesh", f"{mesh_path}", "--outIm", f"{path_dmIm}", "--outK", f"{path_dmK}", "--outP", f"{path_dmP}"])
+
+# annotate cps
+if start <= 2:
+    subprocess.run(["python", "-m", "annotate_points", "--im", f"{path_imIm}", "--dm", f"{path_dmIm}", "--out", f"{path_cps}"])
+
+# execute alignment
+if start <= 3:
+    subprocess.run(["julia", "--project=.", "exec_dmcp.jl", "--imK", f"{path_imK}", "--imP", f"{path_imP}", "--dmK", f"{path_dmK}", "--dmP", f"{path_dmP}", "--dmIm", f"{path_dmIm}", "--cps", f"{path_cps}", "--out", f"{path_transform}"])

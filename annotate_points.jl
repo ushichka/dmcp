@@ -16,7 +16,7 @@ function parse_commandline()
             required = true
         "--imsep"
             arg_type = Char
-            default = ';'
+            default = ','
         "--out", "-o"
             arg_type = String
             default = "cps.csv"
@@ -35,8 +35,11 @@ using DelimitedFiles
 
 ## read input
 println("reading input")
-dm = readdlm(parsed_args["dm"], parsed_args["dmsep"])[end:-1:1, 1:end]'
-im = readdlm(parsed_args["im"], parsed_args["imsep"])[end:-1:1, 1:end]' # thermal images have one column to many...
+dm = readdlm(parsed_args["dm"], parsed_args["dmsep"], Float32)[end:-1:1, 1:end]'
+im = readdlm(parsed_args["im"], parsed_args["imsep"], Float32)[end:-1:1, 1:end]' # thermal images have one column to many...
+
+dm = convert(Matrix{Float32}, dm)
+im = convert(Matrix{Float32}, im)
 
 ## start drawing
 println("preparing visualization")

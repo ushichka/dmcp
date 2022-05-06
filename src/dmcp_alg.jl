@@ -33,6 +33,7 @@ function estimate_projection_matrix_dlt(cps)
 
     # solve homogeneous linear system Ax = 0. x Represent the coefficients of the camera matrix
     # solve in least squares sense regarding reprojection error using SVD 
+    A |> display
     U, S, V = la.svd(A)
     P = reshape(V[:, 12], 4, 3) |> la.transpose
 
@@ -106,7 +107,7 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
 
     # bring cps from depth map to camera space dm (3D)
     bring_to_camera_space_dm(px, py) = point_in_depth_map_to_camera_space(px, py, Kdm, Idm)
-    pdm_camera = cps |> eachrow .|> sel_dm_point .|> p -> bring_to_camera_space_dm(p[1], p[2])
+    pdm_camera = cps |> eachrow .|> sel_dm_point .|> p -> bring_to_camera_space_dm(p[2], p[1]) # TODO: why does it need to be switched? Does it still work for old setting? Why no crash before?
 
     # bring cps from camera space to world space
     bring_to_world_space(px, py, pz) = point_in_camera_space_to_world_space(px, py, pz, Pdm, Kdm)
