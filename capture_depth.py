@@ -54,10 +54,10 @@ def clicked(event):
     right = np.cross(forward, up)
     right = right / np.linalg.norm(right)
     T = plotter.camera.GetPosition()
-    print("pos ", T)
-    print("up ", up)
-    print("forward ", forward)
-    print("right ", right)
+    #print("pos ", T)
+    #print("up ", up)
+    #print("forward ", forward)
+    #print("right ", right)
 
 
 plotter.track_click_position(callback=clicked, side='left', viewport=True)
@@ -85,20 +85,20 @@ R = np.array([[r[0], -u[0], f[0]],
               [r[1], -u[1], f[1]],
               [r[2], -u[2], f[2]]])
 
-print("pos ", T)
-print("up ", up)
-print("forward ", forward)
-print("right ", right)
+#print("pos ", T)
+#print("up ", up)
+#print("forward ", forward)
+#print("right ", right)
 
 
 C = np.hstack((R, np.array([T]).T))
 C = np.vstack((C, [0, 0, 0, 1]))
 
-print("C \n", C)
+#print("C \n", C)
 
 E = np.linalg.inv(C)
 E = E[0:3, 0:4]
-print("E \n", E)
+#print("E \n", E)
 
 K = np.array([[526, 0, 320], [0, 526, 256], [0, 0, 1]])
 
@@ -110,7 +110,7 @@ cy = h * wcy/-2+float(h)/2
 
 # convert the focal length to view angle and set it
 view_angle = plotter.camera.GetViewAngle()
-print("va", view_angle)
+#print("va", view_angle)
 
 # it was (2* ,math.tan...) but 1*... seems to work
 f_x = -w / (1 * math.tan(view_angle/2.0))
@@ -120,12 +120,12 @@ K = np.array([[f_x, 0, cx],
               [0, f_y, cy],
               [0, 0,  1]])
 
-print("K\n", K)
+#print("K\n", K)
 
 
 P = np.matmul(K, E)
 
-print("P \n", P)
+#print("P \n", P)
 
 # capture photo
 n_rows = h
@@ -150,5 +150,4 @@ np.savetxt(args.outP, P, delimiter=",")
 #im = im.convert('RGBA')
 #im.save('data/dm.png', "PNG")
 
-print("DATA SAVED")
-print("closing program...")
+print(f"captured data saved to {args.outIm}, {args.outK} and {args.outP}")

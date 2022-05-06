@@ -33,7 +33,6 @@ function estimate_projection_matrix_dlt(cps)
 
     # solve homogeneous linear system Ax = 0. x Represent the coefficients of the camera matrix
     # solve in least squares sense regarding reprojection error using SVD 
-    A |> display
     U, S, V = la.svd(A)
     P = reshape(V[:, 12], 4, 3) |> la.transpose
 

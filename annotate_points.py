@@ -3,6 +3,7 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import MouseButton
+import colorcet as cc
 
 parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
 parser.add_argument("--im")
@@ -20,12 +21,12 @@ path_cps = args.out
 image_im = np.loadtxt(path_im, delimiter=",")[-1:0:-1,:]
 image_dm = np.loadtxt(path_dm, delimiter=",")[-1:0:-1,:]
 
-def draw(ax: plt.Axes, im, points):
-    print(im)
-    ax.imshow(im, origin="lower")
+def draw(ax: plt.Axes, im: np.ndarray, points):
+    #print(im)
+    ax.imshow(im, origin="lower", cmap=cc.cm.fire)
     if len(points) != 0:
         points = np.array(points)
-        ax.scatter(points[:,0], points[:,1],c="red", marker="x")
+        ax.scatter(points[:,0], points[:,1],c="blue", marker="x")
         for i in range(points.shape[0]):
             ax.annotate(str(i+1),points[i,:],bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=1),xytext=(points[i,0]+15, points[i,1]+15))
     ax.figure.canvas.draw()
@@ -53,7 +54,7 @@ def on_click(event, ax, im, points):
             #print("  in axes")
             #print('  data coords %f %f' % (x, y))
             imval = im[round(y),round(x)]
-            print(imval)
+            #print(imval)
             if not np.isnan(imval):
                 points.append([x, y])
                 draw(ax, im,points)
@@ -72,6 +73,5 @@ if len(points_im) != len(points_dm):
     print("you must annotate the same amount of points in each image", file=sys.stderr)
     exit(1)
 cps = np.hstack((np.array(points_im), np.array(points_dm)))
-print(cps.shape)
 np.savetxt(path_cps,cps,delimiter=",", fmt="%06.1f")
-print("annotations saved")
+print(f"annotations saved to {path_cps}")

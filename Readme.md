@@ -97,7 +97,7 @@ K, P = loadCalibration(cam, "data/ushichka/2018-08-18") # 2018-08-18 is the reco
 
 ```
 ## Experiment Script
-/home/julian/venvs/dmcp/bin/python /home/julian/code/uni/dmcp/exec_experiment.py --dir /tmp/experiments --mesh demo/lidar_roi.ply --recording ~/data/ushichka/2018-08-18 --cam 0
+/home/julian/venvs/dmcp/bin/python /home/julian/code/uni/dmcp/exec_experiment.py --dir /tmp/experiments --mesh demo/lidar_roi.ply --recording ~/data/ushichka/2018-08-18 --cam 0 --start 1
 
 ### python annotation tool
 python -m annotate_points --im /tmp/experiments/imIm.csv --dm /tmp/experiments/dmIm.csv --out /tmp/experiments/cps.csv

@@ -41,7 +41,7 @@ parsed_args = parse_commandline()
 using DelimitedFiles
 
 ## reading input
-println("reading input files")
+#println("reading input files")
 imK = readdlm(parsed_args["imK"], ',')
 imP = readdlm(parsed_args["imP"], ',')
 
@@ -55,8 +55,8 @@ cps = readdlm(parsed_args["cps"], ',')
 dmIm = convert(Matrix{Float32}, dmIm)
 cps = convert(Matrix{Float64}, cps)
 
-println("executing algorithm")
+#println("executing algorithm")
 transform = exec_dmcp(imK, imP, dmIm, dmK, dmP, cps)
 
-println("writing to $(parsed_args["out"])")
 writedlm(parsed_args["out"], transform, ',') 
+println("transformation saved to $(parsed_args["out"])")
