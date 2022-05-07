@@ -150,4 +150,4 @@ np.savetxt(args.outP, P, delimiter=",")
 #im = im.convert('RGBA')
 #im.save('data/dm.png', "PNG")
 
-print(f"captured data saved to {args.outIm}, {args.outK} and {args.outP}")
+print(f"captured data saved to:\n -- {args.outIm}\n -- {args.outK}\n -- {args.outP}")

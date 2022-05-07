@@ -23,7 +23,7 @@ image_dm = np.loadtxt(path_dm, delimiter=",")[-1:0:-1,:]
 
 def draw(ax: plt.Axes, im: np.ndarray, points):
     #print(im)
-    ax.imshow(im, origin="lower", cmap=cc.cm.fire)
+    ax.imshow(im, origin="lower", cmap=cc.cm.get("gouldian_r"))
     if len(points) != 0:
         points = np.array(points)
         ax.scatter(points[:,0], points[:,1],c="cyan", marker="x")

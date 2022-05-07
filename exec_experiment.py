@@ -5,6 +5,9 @@ import subprocess
 import hashlib
 from pyushichka.load_data import loadCalibration, loadImage
 import shutil
+import matplotlib.pyplot as plt
+import pathlib
+import colorcet as cc
 
 parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
 parser.add_argument('--dir', help="folder where data belonging to experiment gets stored")
@@ -20,6 +23,10 @@ recording = args.recording
 mesh_path = args.mesh
 dir = args.dir
 step=int(args.step)
+
+# specify subdir for experiment named after recording
+recording_name = pathlib.Path(recording).name
+dir = dir + os.sep + str(recording_name)+"--"+f"cam{cam}"
 
 # dir paths
 ## lidar md5 hash
@@ -43,7 +50,6 @@ path_reprBar = dir + os.sep + "reprBar.png"
 # prepare experiment folder for full run
 if step == -1:
     # make sure dir exists
-    dir = args.dir
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
@@ -61,21 +67,28 @@ if step == -1:
     with open(path_lidar_hash, "w") as hashfile:
         hashfile.write(f"{lidar_hash}\n")
 
-
 # capture depth map
 if step == -1 or step == 1:
+    print("STEP 1:")
+    # also show reference image
+    plt.figure("Preview for Orientation")
+    plt.imshow(img, cmap=cc.cm.get("gouldian_r"))
+    plt.show(block=True)
     subprocess.run(["python", "-m", "capture_depth", "--mesh", f"{mesh_path}", "--outIm", f"{path_dmIm}", "--outK", f"{path_dmK}", "--outP", f"{path_dmP}"])
 
 # annotate cps
 if step == -1 or step == 2:
+    print("STEP 2:")
     subprocess.run(["python", "-m", "annotate_points", "--im", f"{path_imIm}", "--dm", f"{path_dmIm}", "--out", f"{path_cps}"])
 
 # execute alignment
 if step == -1 or step == 3:
+    print("STEP 3:")
     subprocess.run(["julia", "--project=.", "exec_dmcp.jl", "--imK", f"{path_imK}", "--imP", f"{path_imP}", "--dmK", f"{path_dmK}", "--dmP", f"{path_dmP}", "--dmIm", f"{path_dmIm}", "--cps", f"{path_cps}", "--out", f"{path_transform}"])
 
 # execute alignment
 if step == -1 or step == 4:
+    print("STEP 4:")
     subprocess.run([
         "python", "-m", "compute_reprojection_error", 
         "--cps", f"{path_cps}",

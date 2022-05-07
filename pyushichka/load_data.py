@@ -13,7 +13,15 @@ from scipy.io import loadmat
 def loadImage(camera,image, data_root):
     camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
     path_images = data_root + os.sep + "image" + os.sep + "raw_images"+ os.sep
-    path_img = list(Path(path_images).rglob(f"*K{camera}*512x640shape.csv"))[image]
+    path_img_list = list(Path(path_images).rglob(f"*K{camera}*512x640shape.csv"))
+    
+    # the raw_image dir is not always there
+    if len(path_img_list) != 0:
+        path_img = path_img_list[image]
+    else:
+        path_images = data_root + os.sep + "image" + os.sep
+        path_img_list = list(Path(path_images).rglob(f"*K{camera}*512x640shape.csv"))
+        path_img = path_img_list[image]
     
     im = np.loadtxt(path_img,
                  delimiter=",", dtype=np.float32)

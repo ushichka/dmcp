@@ -79,7 +79,7 @@ np.savetxt(path_outErrs, np.array(repr_err),fmt="%05.2f")
 # visualize
 ## scatter
 plt.figure()
-plt.imshow(im,origin="lower",cmap=cc.cm.kbc)
+plt.imshow(im,origin="lower",cmap=cc.cm.gouldian)
 plt.scatter(cps[:,0], cps[:,1],marker="o", c="green", label="original annotation")
 plt.scatter(projs[:,0],projs[:,1], marker="x", c="red", label="backprojected annotation")
 plt.legend(loc="upper right")
@@ -90,3 +90,5 @@ plt.figure()
 plt.bar(np.arange(len(repr_err)), repr_err, label="reprojection error")
 plt.legend(loc="upper right")
 plt.savefig(path_outBar, dpi=300)
+
+print(f"reprojection error data saved to:\n -- {path_outErrs}\n -- {path_outScatter}\n -- {path_outBar}")
