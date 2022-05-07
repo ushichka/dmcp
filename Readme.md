@@ -57,6 +57,8 @@ julia --project=. annotate_points.jl --dm data/dmIm.csv  --im demo/imIm.csv --ou
 * Click on at least 8 points in both views which correspond to each other. You need to do it in the correct order ('1' in the depth map, and then the same point in the camera image). You **cannot** correct a mouse click as of now. Re-type the command if you made a mistake. 
 * When you're done, close the plot window. The output file will be in the folder.
 
+**NOTE** images should be stored so that the origin is on the top left, with x-axis pointing to the right and y-axis pointing downwards (most programs default to this)
+
 #### Step 3: Run the camera-mesh alignment
 * Stay in the ```dmcp``` folder and run the alignment. Type the following into your command prompt/bash window
 ```
@@ -101,4 +103,6 @@ K, P = loadCalibration(cam, "data/ushichka/2018-08-18") # 2018-08-18 is the reco
 /home/julian/venvs/dmcp/bin/python /home/julian/code/uni/dmcp/exec_experiment.py --dir /tmp/experiments --mesh demo/lidar_roi.ply --recording ~/data/ushichka/2018-08-18 --cam 0 [--step 1]
 
 ### python annotation tool
-python -m annotate_points --im /tmp/experiments/imIm.csv --dm /tmp/experiments/dmIm.csv --out /tmp/experiments/cps.csv
+```
+python -m compute_reprojection_error --cps C:\data\experiments_demo\cps.csv --dm C:\data\experiments_demo\dmIm.csv --dmK C:\data\experiments_demo\dmK.csv --dmP C:\data\experiments_demo\dmP.csv  --im C:\data\experiments_demo\imIm.csv  --imP C:\data\experiments_demo\imP.csv --transform C:\data\experiments_demo\transform.csv --outErrs C:\data\experiments_demo\reprErrs.csv --outScatter C:\data\experiments_demo\reprScatter.png --outBar C:\data\experiments_demo\reprBar.png 
+```

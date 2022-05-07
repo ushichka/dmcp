@@ -31,10 +31,14 @@ path_dmP = dir + os.sep + "dmP.csv"
 ## annotation paths
 path_imIm = dir + os.sep + "imIm.csv"
 path_cps = dir + os.sep + "cps.csv"
-## alignment path
+## alignment paths
 path_imK = dir + os.sep + "imK.csv"
 path_imP = dir + os.sep + "imP.csv"
 path_transform = dir + os.sep + "transform.csv"
+## reprojection error paths
+path_reprErrs = dir + os.sep + "reprErrs.csv"
+path_reprScatter = dir + os.sep + "reprScatter.png"
+path_reprBar = dir + os.sep + "reprBar.png"
 
 # prepare experiment folder for full run
 if step == -1:
@@ -69,3 +73,19 @@ if step == -1 or step == 2:
 # execute alignment
 if step == -1 or step == 3:
     subprocess.run(["julia", "--project=.", "exec_dmcp.jl", "--imK", f"{path_imK}", "--imP", f"{path_imP}", "--dmK", f"{path_dmK}", "--dmP", f"{path_dmP}", "--dmIm", f"{path_dmIm}", "--cps", f"{path_cps}", "--out", f"{path_transform}"])
+
+# execute alignment
+if step == -1 or step == 4:
+    subprocess.run([
+        "python", "-m", "compute_reprojection_error", 
+        "--cps", f"{path_cps}",
+        "--dm", f"{path_dmIm}",
+        "--dmK", f"{path_dmK}",
+        "--dmP", f"{path_dmP}",
+        "--im", f"{path_imIm}",
+        "--imP", f"{path_imP}",
+        "--transform", f"{path_transform}",
+        "--outErrs", f"{path_reprErrs}",
+        "--outScatter", f"{path_reprScatter}",
+        "--outBar", f"{path_reprBar}"
+        ])
