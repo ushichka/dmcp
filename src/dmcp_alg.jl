@@ -6,7 +6,6 @@ la = LinearAlgebra
 include("absoluteOrientationQuaternionHorn.jl")
 
 
-
 ## -- helper methods for single pose calibration --
 
 # cps matrix with each row a correspondence. Expects rows [point2D point3D] = [u v X Y Z]
@@ -106,7 +105,7 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
 
     # bring cps from depth map to camera space dm (3D)
     bring_to_camera_space_dm(px, py) = point_in_depth_map_to_camera_space(px, py, Kdm, Idm)
-    pdm_camera = cps |> eachrow .|> sel_dm_point .|> p -> bring_to_camera_space_dm(p[2], p[1]) # TODO: why does it need to be switched? Does it still work for old setting? Why no crash before?
+    pdm_camera = cps |> eachrow .|> sel_dm_point .|> p -> bring_to_camera_space_dm(p[1], p[2])
 
     # bring cps from camera space to world space
     bring_to_world_space(px, py, pz) = point_in_camera_space_to_world_space(px, py, pz, Pdm, Kdm)
@@ -117,7 +116,6 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
     cps_mat_img_world = hcat(first.(cps |> eachrow .|> sel_im_point), last.(cps |> eachrow .|> sel_im_point), hcat(pdm_world...)')
     P = estimate_projection_matrix_dlt(cps_mat_img_world)
     repr_err = reprojection_error(P, cps_mat_img_world)
-
 
     # -- calculate transformation --
 

@@ -25,7 +25,7 @@ def loadCalibration(i, data_root):
     """ Uses calibration round 1
         Usage: from pyushichka import loadCalibration
     """
-    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round1" 
+    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round1" #TODO: use last intead of 1
     path_dltCoefs = list(Path(path_calib_out).rglob('*_dltCoefs.csv'))[-1] # use last for legacy reasons
     path_easyWand = list(Path(path_calib_out).rglob('*_easyWandData.mat'))[-1]
     #extractIntrinsics()

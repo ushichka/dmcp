@@ -47,7 +47,7 @@ imP = readdlm(parsed_args["imP"], ',')
 
 dmK = readdlm(parsed_args["dmK"], ',')
 dmP = readdlm(parsed_args["dmP"], ',')
-dmIm = readdlm(parsed_args["dmIm"], ',')[end:-1:1, 1:end]'
+dmIm = readdlm(parsed_args["dmIm"], ',')[end:-1:1, 1:end]
 
 cps = readdlm(parsed_args["cps"], ',')
 

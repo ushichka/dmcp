@@ -26,7 +26,7 @@ def draw(ax: plt.Axes, im: np.ndarray, points):
     ax.imshow(im, origin="lower", cmap=cc.cm.fire)
     if len(points) != 0:
         points = np.array(points)
-        ax.scatter(points[:,0], points[:,1],c="blue", marker="x")
+        ax.scatter(points[:,0], points[:,1],c="cyan", marker="x")
         for i in range(points.shape[0]):
             ax.annotate(str(i+1),points[i,:],bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=1),xytext=(points[i,0]+15, points[i,1]+15))
     ax.figure.canvas.draw()
