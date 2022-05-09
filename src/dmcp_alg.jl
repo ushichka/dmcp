@@ -1,7 +1,31 @@
 # (c) Julian Jandeleit 2022
 using MAT # to read demo
 using LinearAlgebra
+using PyCall
 la = LinearAlgebra
+
+py"""
+import numpy as np
+def horn(P, Q):
+    if P.shape != Q.shape:
+        print("Matrices P and Q must be of the same dimensionality")
+        sys.exit(1)
+
+    centroids_P = np.mean(P, axis=1)
+    centroids_Q = np.mean(Q, axis=1)
+    A = P - np.outer(centroids_P, np.ones(P.shape[1]))
+    B = Q - np.outer(centroids_Q, np.ones(Q.shape[1]))
+    C = np.dot(A, B.transpose())
+    U, S, V = np.linalg.svd(C)
+    R = np.dot(V.transpose(), U.transpose())
+    L = np.eye(3)
+    if(np.linalg.det(R) < 0):
+        L[2][2] *= -1
+
+    R = np.dot(V.transpose(), np.dot(L, U.transpose()))
+    t = np.dot(-R, centroids_P) + centroids_Q
+    return (R, t)
+"""
 
 include("absoluteOrientationQuaternionHorn.jl")
 
@@ -117,6 +141,17 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
     P = estimate_projection_matrix_dlt(cps_mat_img_world)
     repr_err = reprojection_error(P, cps_mat_img_world)
 
+    print("\nP est")
+    P |> display
+
+    print("\nestimated pose")
+    ns = la.nullspace(P)
+    ns = ns / ns[end]
+    ns |> display
+
+    "\npreprerr" |> display
+    repr_err |> display
+
     # -- calculate transformation --
 
     # estimate scaling between camera calibration space and world space
@@ -135,10 +170,28 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
     # we want the transformation from calibration space to world space
     s, R, T = absoluteOrientationQuaternion(hcat(pdm_calib...), hcat(pdm_world...), false)
 
+    print("\nRj")
+    R |> display
+    print("\nTj")
+    T |> display
+    print("\nscale horn $s, sf $scale_factor")
+
+    Rp, Tp = py"horn"(hcat(pdm_calib...),hcat(pdm_world...))
+    print("\nRp")
+    Rp |> display
+    print("\nTp")
+    Tp |> display
+
     # build affine transform A from individual parts
     A = [[s * R T]; 0 0 0 1]
 
-    return A
+    # test A
+    Pnew = Pim * inv(A)
+    ns = la.nullspace(Pnew)
+    ns = ns / ns[end]
+    ns |> display
+
+    return P, A
     #return pdm_camera, pdm_world, P, repr_err, scale_factor, cps_mat_img_world, pdm_camera_est, pdm_calib
 end
 

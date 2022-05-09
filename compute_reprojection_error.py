@@ -15,6 +15,7 @@ parser.add_argument("--dmP", required=True)
 parser.add_argument("--im", required=True)
 parser.add_argument("--imP", required=True)
 parser.add_argument("--transform", required=True)
+parser.add_argument("--Pdlt")
 parser.add_argument("--outErrs", required=True)
 parser.add_argument("--outScatter", required=True)
 parser.add_argument("--outBar", required=True)
@@ -28,6 +29,7 @@ path_dmP = args.dmP
 path_im  = args.im
 path_imP = args.imP
 path_transform = args.transform
+path_Pdlt = args.Pdlt
 path_outErrs = args.outErrs
 path_outScatter = args.outScatter
 path_outBar = args.outBar
@@ -39,6 +41,10 @@ dmP: np.ndarray = np.loadtxt(path_dmP,delimiter=",")
 im: np.ndarray = np.loadtxt(path_im,delimiter=",")[-1:0:-1,:]
 imP: np.ndarray = np.loadtxt(path_imP,delimiter=",")
 transform: np.ndarray = np.loadtxt(path_transform,delimiter=",")
+Pdlt = None
+if path_Pdlt != None:
+    Pdlt: np.ndarray = np.loadtxt(path_Pdlt,delimiter=",")
+
 
 imP = np.vstack((imP,np.array([0,0,0,1])))
 
@@ -63,6 +69,13 @@ annotated_world_points = [camera_point_to_world_point(p[0],p[1],p[2],dmK,dmP) fo
 # convert camera Projection matrix using estimated transform
 P_world_space_hat = np.matmul(imP, la.inv(transform))
 P_world_space = P_world_space_hat[:3,:]
+
+if type(Pdlt) != type(None):
+    P_world_space = Pdlt
+
+ns = la.null_space(P_world_space)
+ns = ns / ns[-1]
+print(f"P_trans_null \n{ns}")
 
 # backproject annotated points to estimated camera
 projs_hat = [np.matmul(P_world_space, np.array([p[0], p[1], p[2], 1])) for p in annotated_world_points ]

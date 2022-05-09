@@ -31,6 +31,10 @@ function parse_commandline()
             arg_type = String
             default = "transform.csv"
         
+        "--outPdlt"
+            arg_type = String
+            default = "Pdlt.csv"
+
     end
 
     return parse_args(ARGS, s)
@@ -56,7 +60,8 @@ dmIm = convert(Matrix{Float32}, dmIm)
 cps = convert(Matrix{Float64}, cps)
 
 #println("executing algorithm")
-transform = exec_dmcp(imK, imP, dmIm, dmK, dmP, cps)
+Pdlt, transform = exec_dmcp(imK, imP, dmIm, dmK, dmP, cps)
 
+writedlm(parsed_args["outPdlt"], Pdlt, ',')
 writedlm(parsed_args["out"], transform, ',') 
 println("transformation saved to $(parsed_args["out"])")
