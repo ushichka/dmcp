@@ -6,25 +6,21 @@ la = LinearAlgebra
 
 py"""
 import numpy as np
-def horn(P, Q):
-    if P.shape != Q.shape:
-        print("Matrices P and Q must be of the same dimensionality")
-        sys.exit(1)
+import cv2
+def solvePnP(objP, imgP, imK):  
+    retval, rvec, tvec, _inliers = cv2.solvePnPRansac(objP, imgP,imK,None,flags=cv2.SOLVEPNP_SQPNP)
 
-    centroids_P = np.mean(P, axis=1)
-    centroids_Q = np.mean(Q, axis=1)
-    A = P - np.outer(centroids_P, np.ones(P.shape[1]))
-    B = Q - np.outer(centroids_Q, np.ones(Q.shape[1]))
-    C = np.dot(A, B.transpose())
-    U, S, V = np.linalg.svd(C)
-    R = np.dot(V.transpose(), U.transpose())
-    L = np.eye(3)
-    if(np.linalg.det(R) < 0):
-        L[2][2] *= -1
+    rotMat, jacobian = cv2.Rodrigues(rvec)
+#    print(rotMat)
+#    print(tvec)
+    E = np.hstack((rotMat, tvec))
+#    E = np.vstack((E, np.array([0,0,0,1])))
+#    print(imK)
+#    print(E)
+#    E = np.linalg.inv(E)
+    P = np.matmul(imK, E[0:3,:])
+    return P
 
-    R = np.dot(V.transpose(), np.dot(L, U.transpose()))
-    t = np.dot(-R, centroids_P) + centroids_Q
-    return (R, t)
 """
 
 include("absoluteOrientationQuaternionHorn.jl")
@@ -139,23 +135,38 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
     # P is the projection matrix of the camera that observed input Image, in world space
     cps_mat_img_world = hcat(first.(cps |> eachrow .|> sel_im_point), last.(cps |> eachrow .|> sel_im_point), hcat(pdm_world...)')
     P = estimate_projection_matrix_dlt(cps_mat_img_world)
+    
+  
+    P = py"solvePnP"(cps_mat_img_world[:,3:5], cps_mat_img_world[:,1:2], imK)
     repr_err = reprojection_error(P, cps_mat_img_world)
+    # filter out completely wrong annotations
+    #mean_repr_err = sum(repr_err) / length(repr_err)
+    #cps_valid = []
+    #for i = 1:length(repr_err)
+    #    push!(cps_valid,repr_err[i] <= mean_repr_err ) 
+    #end
+    #cps_valid = convert(BitVector,cps_valid)
+    #P = py"solvePnP"(cps_mat_img_world[cps_valid,3:5], cps_mat_img_world[cps_valid,1:2], imK)
+    #repr_err = reprojection_error(P, cps_mat_img_world)
 
-    print("\nP est")
-    P |> display
+    #print("\nP est")
+    #P |> display
 
-    print("\nestimated pose")
+    #print("\nestimated pose")
     ns = la.nullspace(P)
     ns = ns / ns[end]
     ns |> display
 
-    "\npreprerr" |> display
-    repr_err |> display
+    #"\npreprerr" |> display
+    #repr_err |> display
 
+    #print("\n\n")
     # -- calculate transformation --
 
     # estimate scaling between camera calibration space and world space
     scale_factor = estimate_scaling(Kim, P, Kim, Pim)
+    scale_factor = 1.0
+    print("scaling $scale_factor")
 
     # bring cps from world to camera_space (of the camera that took the image)
     bring_to_camera_space_est(p) = point_in_world_space_to_camera_space(Kim, P, p, scale_factor)
@@ -170,17 +181,17 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
     # we want the transformation from calibration space to world space
     s, R, T = absoluteOrientationQuaternion(hcat(pdm_calib...), hcat(pdm_world...), false)
 
-    print("\nRj")
-    R |> display
-    print("\nTj")
-    T |> display
-    print("\nscale horn $s, sf $scale_factor")
+    #print("\nRj")
+    #R |> display
+    #print("\nTj")
+    #T |> display
+    #print("\nscale horn $s, sf $scale_factor")
 
-    Rp, Tp = py"horn"(hcat(pdm_calib...),hcat(pdm_world...))
-    print("\nRp")
-    Rp |> display
-    print("\nTp")
-    Tp |> display
+    #Rp, Tp = py"horn"(hcat(pdm_calib...),hcat(pdm_world...))
+    #print("\nRp")
+    #Rp |> display
+    #print("\nTp")
+    #Tp |> display
 
     # build affine transform A from individual parts
     A = [[s * R T]; 0 0 0 1]

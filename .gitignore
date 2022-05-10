@@ -3,4 +3,5 @@ __pycache__
 export
 data
 lidar_roi.ply
+INRIA_MUSIS.stl
 Manifest.toml
