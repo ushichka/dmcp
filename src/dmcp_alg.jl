@@ -137,7 +137,7 @@ function exec_dmcp(Kim, Pim, Idm, Kdm, Pdm, cps)
     P = estimate_projection_matrix_dlt(cps_mat_img_world)
     
   
-    P = py"solvePnP"(cps_mat_img_world[:,3:5], cps_mat_img_world[:,1:2], imK)
+    #P = py"solvePnP"(cps_mat_img_world[:,3:5], cps_mat_img_world[:,1:2], Kim)
     repr_err = reprojection_error(P, cps_mat_img_world)
     # filter out completely wrong annotations
     #mean_repr_err = sum(repr_err) / length(repr_err)
