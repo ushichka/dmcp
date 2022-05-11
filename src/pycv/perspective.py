@@ -1,5 +1,6 @@
 #%%
 import numpy as np
+import math
 import scipy.linalg as la
 
 def calibrate_dlt(img_pts, world_pts):
@@ -60,6 +61,36 @@ def eul2rot(theta) :
                   [-np.sin(theta[1]),                        np.sin(theta[0])*np.cos(theta[1]),                                                           np.cos(theta[0])*np.cos(theta[1])]])
 
     return R
+
+def reprojection_error(P, image_points, world_points):
+    projs_hat = [np.matmul(P, np.array([p[0], p[1], p[2], 1])) for p in world_points ]
+    projs = [np.array([p[0], p[1]]) / p[2] for p in projs_hat]
+
+    # reprojection error
+    repr_err = [ math.sqrt((projs[i][0] - image_points[i,0])**2 + (projs[i][1] - image_points[i,1])**2) for  i in range(len(projs))]
+    projs = np.array(projs)
+    return np.array(repr_err)
+
+def horn_affine_transformation(P,Q):
+    P = P.T
+    Q = Q.T
+    if P.shape != Q.shape:
+        print("Matrices P and Q must be of the same dimensionality")
+        raise Exception("matrices must be same shape")
+    centroids_P = np.mean(P, axis=1)
+    centroids_Q = np.mean(Q, axis=1)
+    A = P - np.outer(centroids_P, np.ones(P.shape[1]))
+    B = Q - np.outer(centroids_Q, np.ones(Q.shape[1]))
+    C = np.dot(A, B.transpose())
+    U, S, V = np.linalg.svd(C)
+    R = np.dot(V.transpose(), U.transpose())
+    L = np.eye(3)
+    if(np.linalg.det(R) < 0):
+        L[2][2] *= -1
+    R = np.dot(V.transpose(), np.dot(L, U.transpose()))
+    t = np.dot(-R, centroids_P) + centroids_Q
+    T = np.array([t]).T
+    return np.hstack((R,T))
 
 def test_calibrate_dlt():
     """from https://github.com/BonJovi1/Camera-Calibration/blob/master/code.ipynb"""
