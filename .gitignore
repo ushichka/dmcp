@@ -5,3 +5,4 @@ data
 lidar_roi.ply
 INRIA_MUSIS.stl
 Manifest.toml
+src.egg-info/
