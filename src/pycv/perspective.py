@@ -2,6 +2,17 @@
 import numpy as np
 import math
 import scipy.linalg as la
+import cv2
+
+def solve_PnP(world, native, K, distCoeffs = np.array([[0, 0, 0, 0]]).astype("float32")):
+    retval, rvec, tvec = cv2.solvePnP(world.astype("float32"), native.astype("float32"), K.astype("float32"),distCoeffs)
+
+    R, _ = cv2.Rodrigues(rvec)
+    T = tvec
+    camera_extrinsic_matrix = np.hstack((R,T))
+    camera_extrinsic_matrix_hat = np.vstack((camera_extrinsic_matrix,[0,0,0,1]))
+    camera_pose_matrix = la.inv(camera_extrinsic_matrix_hat)[:3,:]
+    return camera_pose_matrix
 
 def calibrate_dlt(img_pts, world_pts):
     """ each row one point """
