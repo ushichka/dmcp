@@ -1,5 +1,4 @@
-from PIL import Image
-from h_backproject_mesh import main as capture_depth
+from src.dmcp_workflow.h_backproject_mesh import main as capture_depth
 import math
 import pyvista as pv
 import argparse
@@ -10,7 +9,7 @@ def generate_depth_map(mesh_path):
     mesh = pv.read(mesh_path)
     
     plotter = pv.Plotter(off_screen=False, notebook=False)
-    actor = plotter.add_mesh(mesh, color="grey")
+    actor = plotter.add_mesh(mesh)
     def clicked(event):
         up = plotter.camera.GetViewUp()
         forward = plotter.camera.GetDirectionOfProjection()
