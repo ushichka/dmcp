@@ -73,6 +73,9 @@ def generate_depth_map(mesh_path):
 
     depth_map = capture_depth(mesh_path, P, K, n_rows, n_cols, False)
 
+    # format origin bottom left
+    depth_map = depth_map[-1:0:-1,:]
+
     return depth_map, K, P
 
 if __name__ == "__main__":
