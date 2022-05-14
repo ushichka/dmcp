@@ -1,6 +1,35 @@
+from turtle import distance
 import numpy as np
 import scipy.linalg as la
-from .perspective import solve_PnP, horn_affine_transformation
+from perspective import solve_PnP, horn_affine_transformation
+
+def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndarray):
+    if dmP.shape != (3,4):
+        raise Exception(f"dmP shape must be 3,4 bit is {dmP.shape}")
+
+    if dmK.shape != (3,3):
+        raise Exception("dmK shape must be 3,3")
+
+    if dmPts.shape[1] != 2:
+        raise Exception("dmPts must have 2 columns")
+
+
+    world_points = []
+    for i in range(dmPts.shape[0]):
+        px, py = dmPts[i,:]
+        pt_camera_space = dm[round(py), round(px)] * np.matmul(la.inv(dmK), [px, py, 1])
+        pt_camera_space_hat = np.stack((pt_camera_space, [1]))
+        extrinsic_matrix = np.matmul(la.inv(dmK), dmP)
+        extrinsic_matrix_hat = np.vstack((extrinsic_matrix,[0,0,0,1]))
+        pose_matrix = la.inv(extrinsic_matrix_hat)[:3,:]
+        pt_world_space = np.matmul(pose_matrix, pt_camera_space_hat)
+
+        world_points.append(pt_world_space)
+
+    world_points = np.array(world_points).astype("float32")
+    return world_points
+
+
 
 def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndarray, box_world: np.ndarray):
     # box is annotated points

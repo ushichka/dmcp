@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+from src.pycv.dmcp import dmcp, dm_to_world
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
@@ -23,3 +24,11 @@ if __name__ == "__main__":
     dmIm = np.loadtxt(args.dmIm, delimiter=",")[-1:0:-1,:]
 
     cps = np.loadtxt(args.cps, delimiter=",")
+
+    world_points = dm_to_world(dmIm, dmK,dmP,cps[:,2:])
+
+    A = dmcp(imK, imP, cps[:,:2], world_points)
+
+    np.savetxt(args.out, A, delimiter=',') 
+    print(f"transformation saved to {args.out}")
+
