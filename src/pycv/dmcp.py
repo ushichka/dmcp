@@ -54,6 +54,10 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
 
     # DMCP Step 1 calibrate camera in world space using annotations
     pose_matrix = solve_PnP(box_world,box_native_x_native,K_native)
+    # estimated pose
+    print("estimated pose"),
+    _pose = la.null_space(pose_matrix) / la.null_space(pose_matrix)[-1]
+    print(_pose)
     pose_matrix_hat = np.vstack((pose_matrix, [0,0,0,1]))
     extrinsic_matrix_world = la.inv(pose_matrix_hat)[:3,:]
 
