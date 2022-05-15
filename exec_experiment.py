@@ -76,14 +76,15 @@ if step == -1 or step == 1:
     print("STEP 1:")
     # also show reference image
     plt.figure("Preview for Orientation")
+    img, im_path_orig = loadImage(cam, 0, recording)
     plt.imshow(img, cmap=cc.cm.get("gouldian_r"))
     plt.show(block=True)
-    subprocess.run(["python", "-m", "capture_depth", "--mesh", f"{mesh_path}", "--outIm", f"{path_dmIm}", "--outK", f"{path_dmK}", "--outP", f"{path_dmP}"])
+    subprocess.run(["python", "dmcpworkflow/capture_depth.py", "--mesh", f"{mesh_path}", "--outIm", f"{path_dmIm}", "--outK", f"{path_dmK}", "--outP", f"{path_dmP}"])
 
 # annotate cps
 if step == -1 or step == 2:
     print("STEP 2:")
-    subprocess.run(["python", "-m", "annotate_points", "--im", f"{path_imIm}", "--dm", f"{path_dmIm}", "--out", f"{path_cps}"])
+    subprocess.run(["python", "dmcpworkflow/annotate_points.py", "--im", f"{path_imIm}", "--dm", f"{path_dmIm}", "--out", f"{path_cps}"])
 
 # execute alignment
 if step == -1 or step == 3:
