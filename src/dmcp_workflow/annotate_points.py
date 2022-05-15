@@ -1,9 +1,80 @@
 import argparse
+from concurrent.futures import thread
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import MouseButton
 import colorcet as cc
+import pyvista as pv
+
+def annotate_with_mesh(mesh: pv.DataSet, image_im: np.ndarray):
+    plotter = pv.Plotter(off_screen=False,notebook=False)
+
+    mesh_points = []
+
+    def label_mesh_points(id,plotter, mesh_points):
+        point_id = id
+        centre = mesh.points[point_id]
+        mesh_points.append(centre)
+        number = len(mesh_points)
+        #globe = pv.Sphere(0.05,center=centre)
+        #sphere = plotter.add_mesh(globe)
+        try:
+            plotter.add_point_labels(centre, f'{number}',
+                                    italic=True, font_size=20,
+                                point_color='red', point_size=20,
+                                render_points_as_spheres=True,
+                                always_visible=True, shadow=True)
+            #print(f'Mesh point {number} picked: {centre}')
+        except ValueError:
+            print(f'Value Error, please try again')
+
+
+    def draw(ax: plt.Axes, im: np.ndarray, points):
+        #print(im)
+        ax.imshow(im, origin="lower", cmap=cc.cm.get("gouldian_r"))
+        if len(points) != 0:
+            points = np.array(points)
+            ax.scatter(points[:,0], points[:,1],c="cyan", marker="x")
+            for i in range(points.shape[0]):
+                ax.annotate(str(i+1),points[i,:],bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=1),xytext=(points[i,0]+15, points[i,1]+15))
+        ax.figure.canvas.draw()
+
+    def on_click(event, ax, im, points):
+        #print("onclick")
+        if event.button is MouseButton.LEFT:
+            #print("  left button")
+            if event.inaxes:
+                x, y = (event.xdata, event.ydata)
+                #print("  in axes")
+                #print('  data coords %f %f' % (x, y))
+                imval = im[round(y),round(x)]
+                #print(imval)
+                if not np.isnan(imval):
+                    points.append([x, y])
+                    draw(ax, im,points)
+                else:
+                    print("cannot select, value is nan")
+
+
+
+
+    # activate image picker
+    plt.figure()
+    im_ax = plt.gca()
+    points_im = []
+    draw(im_ax, image_im, points_im)
+    im_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, im_ax, image_im, points_im))
+    plt.show(block=True)
+
+    # activate 3D picker
+    plotter.add_mesh(mesh)
+    plotter.enable_point_picking(use_mesh=True, callback=lambda mesh,mesh_id: label_mesh_points(mesh_id, plotter,mesh_points))
+    plotter.show()
+
+    points_world = mesh_points
+
+    return np.array(points_im), np.array(points_world)
 
 def annotate(image_im, image_dm):
     """origin bottom left """
