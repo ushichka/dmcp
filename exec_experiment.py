@@ -3,7 +3,7 @@ import os
 import numpy as np
 import subprocess
 import hashlib
-from pyushichka.load_data import loadCalibration, loadImage
+from src.pyushichka.load_data import loadCalibration, loadImage
 import shutil
 import matplotlib.pyplot as plt
 import pathlib
@@ -88,7 +88,7 @@ if step == -1 or step == 2:
 # execute alignment
 if step == -1 or step == 3:
     print("STEP 3:")
-    subprocess.run(["julia", "--project=.", "exec_dmcp.jl", "--imK", f"{path_imK}", "--imP", f"{path_imP}", "--dmK", f"{path_dmK}", "--dmP", f"{path_dmP}", "--dmIm", f"{path_dmIm}", "--cps", f"{path_cps}", "--out", f"{path_transform}", "--outPdlt", f"{path_Pdlt}"])
+    subprocess.run(["python", "--project=.", "exec_dmcp.jl", "--imK", f"{path_imK}", "--imP", f"{path_imP}", "--dmK", f"{path_dmK}", "--dmP", f"{path_dmP}", "--dmIm", f"{path_dmIm}", "--cps", f"{path_cps}", "--out", f"{path_transform}", "--outPdlt", f"{path_Pdlt}"])
 
 # execute alignment
 if step == -1 or step == 4:
