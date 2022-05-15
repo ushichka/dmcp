@@ -7,9 +7,9 @@ import colorcet as cc
 
 def annotate(image_im, image_dm):
     """origin bottom left """
-    def draw(ax: plt.Axes, im: np.ndarray, points):
+    def draw(ax: plt.Axes, im: np.ndarray, points, orig="upper"):
         #print(im)
-        ax.imshow(im, origin="lower", cmap=cc.cm.get("gouldian_r"))
+        ax.imshow(im, origin=orig, cmap=cc.cm.get("gouldian_r"))
         if len(points) != 0:
             points = np.array(points)
             ax.scatter(points[:,0], points[:,1],c="cyan", marker="x")
@@ -17,21 +17,23 @@ def annotate(image_im, image_dm):
                 ax.annotate(str(i+1),points[i,:],bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=1),xytext=(points[i,0]+15, points[i,1]+15))
         ax.figure.canvas.draw()
 
+    image_dm = image_dm[-1:0:-1,:]
+
     plt.figure()
     im_ax = plt.gca()
     points_im = []
-    draw(im_ax, image_im, points_im)
+    draw(im_ax, image_im, points_im, "lower")
 
     plt.figure()
     dm_ax = plt.gca()
     points_dm = []
-    draw(dm_ax, image_dm, points_dm)
+    draw(dm_ax, image_dm, points_dm, "upper")
 
     # interactivity
 
 
 
-    def on_click(event, ax, im, points):
+    def on_click(event, ax, im, points, orig):
         #print("onclick")
         if event.button is MouseButton.LEFT:
             #print("  left button")
@@ -43,13 +45,13 @@ def annotate(image_im, image_dm):
                 #print(imval)
                 if not np.isnan(imval):
                     points.append([x, y])
-                    draw(ax, im,points)
+                    draw(ax, im,points, orig)
                 else:
                     print("cannot select, value is nan")
                 
 
-    im_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, im_ax, image_im, points_im))
-    dm_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, dm_ax, image_dm, points_dm))
+    im_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, im_ax, image_im, points_im, "lower"))
+    dm_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, dm_ax, image_dm, points_dm, "upper"))
 
     plt.show(block=True)
 
