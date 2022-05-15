@@ -3,7 +3,7 @@ import math
 import pyvista as pv
 import argparse
 import numpy as np
-import scipy.io
+import scipy.linalg as la
 
 def generate_depth_map(mesh_path):
     mesh = pv.read(mesh_path)
@@ -26,6 +26,7 @@ def generate_depth_map(mesh_path):
 
     T = plotter.camera.GetPosition()
     T = [T[0], T[1], T[2]]
+    print(T)
 
     up = plotter.camera.GetViewUp()
     forward = plotter.camera.GetDirectionOfProjection()
@@ -70,11 +71,13 @@ def generate_depth_map(mesh_path):
     n_rows = h
     n_cols = w
 
+    pc = la.null_space(P) / la.null_space(P)[-1]
+    print(pc[0], pc[1], pc[2])
 
     depth_map = capture_depth(mesh_path, P, K, n_rows, n_cols, False)
 
     # format origin bottom left
-    depth_map = depth_map[-1:0:-1,:]
+    #depth_map = depth_map[-1:0:-1,:]
 
     return depth_map, K, P
 
