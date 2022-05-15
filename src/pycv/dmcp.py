@@ -20,7 +20,7 @@ def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndar
         distance = dm[round(py), round(px)]
         pt_camera_space =  distance * np.matmul(la.inv(dmK), [px, py, 1])
         pt_camera_space_hat = np.append(pt_camera_space, 1)
-        print(f"dist {distance} cam_hat {pt_camera_space_hat}")
+        #print(f"dist {distance} cam_hat {pt_camera_space_hat}")
 
         extrinsic_matrix = np.matmul(la.inv(dmK), dmP)
         extrinsic_matrix_hat = np.vstack((extrinsic_matrix,[0,0,0,1]))
