@@ -74,7 +74,7 @@ def annotate_with_mesh(mesh: pv.DataSet, image_im: np.ndarray):
 
     points_world = mesh_points
 
-    return np.array(points_im), np.array(points_world)
+    return np.hstack((np.array(points_im), np.array(points_world)))
 
 def annotate(image_im, image_dm):
     """origin bottom left """
@@ -135,21 +135,19 @@ def annotate(image_im, image_dm):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
     parser.add_argument("--im")
-    parser.add_argument("--dm")
+    parser.add_argument("--mesh")
     parser.add_argument("--out")
-
 
     args = parser.parse_args()
 
     path_im = args.im
-    path_dm = args.dm
+    path_mesh = args.mesh
     path_cps = args.out
 
     # read images and set origin to bottom left
     image_im = np.loadtxt(path_im, delimiter=",")[-1:0:-1,:]
-    image_dm = np.loadtxt(path_dm, delimiter=",")[-1:0:-1,:]
-
-    cps = annotate(image_im, image_dm)
+    mesh = pv.read(path_mesh)
+    cps = annotate_with_mesh(mesh, image_im)
 
     np.savetxt(path_cps,cps,delimiter=",", fmt="%06.1f")
     print(f"annotations saved to {path_cps}")

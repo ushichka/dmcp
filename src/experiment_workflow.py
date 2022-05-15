@@ -9,20 +9,8 @@ import matplotlib.pyplot as plt
 import pathlib
 import colorcet as cc
 
-parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
-parser.add_argument('--dir', help="folder where data belonging to experiment gets stored")
-parser.add_argument('--mesh', help="the mesh file to align to")
-parser.add_argument('--recording', help="root folder (date) of ushichka recording")
-parser.add_argument('--cam', help="index of camera to use")
-parser.add_argument('--step', default=-1)
+from src.pycv.dmcp import dmcp
 
-args = parser.parse_args()
-
-cam = int(args.cam)
-recording = args.recording
-mesh_path = args.mesh
-dir = args.dir
-step=int(args.step)
 
 def exec_workflow(cam, recording, mesh_path,exp_dir, step= -1):
     dir = exp_dir
@@ -34,10 +22,6 @@ def exec_workflow(cam, recording, mesh_path,exp_dir, step= -1):
     # dir paths
     ## lidar md5 hash
     path_lidar_hash = dir + os.sep + "lidar_hash.md5"
-    ## captured images for depth map
-    path_dmIm = dir + os.sep + "dmIm.csv"
-    path_dmK = dir + os.sep + "dmK.csv"
-    path_dmP = dir + os.sep + "dmP.csv"
     ## annotation paths
     path_imIm = dir + os.sep + "imIm.csv"
     path_cps = dir + os.sep + "cps.csv"
@@ -50,9 +34,6 @@ def exec_workflow(cam, recording, mesh_path,exp_dir, step= -1):
     path_reprErrs = dir + os.sep + "reprErrs.csv"
     path_reprScatter = dir + os.sep + "reprScatter.png"
     path_reprBar = dir + os.sep + "reprBar.png"
-    path_reprErrsPdlt = dir + os.sep + ".reprErrsPdlt.csv"
-    path_reprScatterPdlt = dir + os.sep + ".reprScatterPdlt.png"
-    path_reprBarPdlt = dir + os.sep + ".reprBarPdlt.png"
 
     # prepare experiment folder for full run
     if step == -1:
@@ -74,55 +55,31 @@ def exec_workflow(cam, recording, mesh_path,exp_dir, step= -1):
         with open(path_lidar_hash, "w") as hashfile:
             hashfile.write(f"{lidar_hash}\n")
 
-    # capture depth map
-    if step == -1 or step == 1:
-        print("STEP 1:")
-        # also show reference image
-        plt.figure("Preview for Orientation")
-        plt.imshow(img, cmap=cc.cm.get("gouldian_r"))
-        plt.show(block=True)
-        subprocess.run(["python", "-m", "capture_depth", "--mesh", f"{mesh_path}", "--outIm", f"{path_dmIm}", "--outK", f"{path_dmK}", "--outP", f"{path_dmP}"])
-
     # annotate cps
-    if step == -1 or step == 2:
-        print("STEP 2:")
-        subprocess.run(["python", "-m", "annotate_points", "--im", f"{path_imIm}", "--dm", f"{path_dmIm}", "--out", f"{path_cps}"])
-
-    # execute alignment
-    if step == -1 or step == 3:
-        print("STEP 3:")
-        subprocess.run(["julia", "--project=.", "exec_dmcp.jl", "--imK", f"{path_imK}", "--imP", f"{path_imP}", "--dmK", f"{path_dmK}", "--dmP", f"{path_dmP}", "--dmIm", f"{path_dmIm}", "--cps", f"{path_cps}", "--out", f"{path_transform}", "--outPdlt", f"{path_Pdlt}"])
-
-    # execute alignment
-    if step == -1 or step == 4:
-        print("STEP 4:")
-        # normal reprojection error
+    if step == -1 or step == 1:
+        print("STEP 1: Annotation")
         subprocess.run([
-            "python", "-m", "compute_reprojection_error", 
-            "--cps", f"{path_cps}",
-            "--dm", f"{path_dmIm}",
-            "--dmK", f"{path_dmK}",
-            "--dmP", f"{path_dmP}",
+            "python", "src/dmcp_workflow/annotate_points.py",
             "--im", f"{path_imIm}",
-            "--imP", f"{path_imP}",
-            "--transform", f"{path_transform}",
-            "--outErrs", f"{path_reprErrs}",
-            "--outScatter", f"{path_reprScatter}",
-            "--outBar", f"{path_reprBar}"
-            ])
+            "--mesh", f"{mesh_path}",
+            "--out", f"{path_cps}"
+        ])
 
-        # compute reprojection error for PDlt only
-        subprocess.run([
-            "python", "-m", "compute_reprojection_error", 
-            "--cps", f"{path_cps}",
-            "--dm", f"{path_dmIm}",
-            "--dmK", f"{path_dmK}",
-            "--dmP", f"{path_dmP}",
-            "--im", f"{path_imIm}",
-            "--imP", f"{path_imP}",
-            "--Pdlt", f"{path_Pdlt}",
-            "--transform", f"{path_transform}",
-            "--outErrs", f"{path_reprErrsPdlt}",
-            "--outScatter", f"{path_reprScatterPdlt}",
-            "--outBar", f"{path_reprBarPdlt}"
-            ])
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='execute dmcp on ushichka')
+    parser.add_argument('--dir', help="folder where data belonging to experiment gets stored")
+    parser.add_argument('--mesh', help="the mesh file to align to")
+    parser.add_argument('--recording', help="root folder (date) of ushichka recording")
+    parser.add_argument('--cam', help="index of camera to use")
+    parser.add_argument('--step', default=-1)
+
+    args = parser.parse_args()
+
+    cam = int(args.cam)
+    recording = args.recording
+    mesh_path = args.mesh
+    expdir = args.dir
+    step=int(args.step)
+
+    exec_workflow(cam, recording, mesh_path, expdir, step)
