@@ -1,17 +1,25 @@
-#%%
+import argparse
+import numpy as np
+from src.pycv.dmcp import dmcp, dm_to_world
 
-import julia
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='execute dmcp')
+    parser.add_argument("--imK")
+    parser.add_argument("--imP")
+    parser.add_argument("--cps")
+    parser.add_argument("--out")
 
-def dmcp_alg(Kim, Pim, Idm, Kdm, Pdm, cps):
-    j = julia.Julia()
-    j.include("src/dmcp_alg.jl")
-    jl_dmcp_alg = j.eval("exec_dmcp")
-    P, A = jl_dmcp_alg(Kim, Pim, Idm, Kdm, Pdm, cps)
-    return A
 
-def dmcp_alg_debug(Kim, Pim, Idm, Kdm, Pdm, cps):
-    j = julia.Julia()
-    j.include("src/dmcp_alg.jl")
-    jl_dmcp_alg = j.eval("exec_dmcp")
-    P, A = jl_dmcp_alg(Kim, Pim, Idm, Kdm, Pdm, cps)
-    return P, A
+    args = parser.parse_args()
+
+    # read images and set origin to bottom left
+    imK = np.loadtxt(args.imK, delimiter=",")
+    imP = np.loadtxt(args.imP, delimiter=",")
+
+    cps = np.loadtxt(args.cps, delimiter=",")
+
+    A = dmcp(imK, imP, cps[:,:2], cps[:,:2:])
+
+    np.savetxt(args.out, A, delimiter=',') 
+    print(f"transformation saved to {args.out}")
+
