@@ -1,5 +1,5 @@
 from PIL import Image
-from .h_backproject_mesh import main as capture_depth
+from .h_backproject_mesh import capture_depth
 import math
 import pyvista as pv
 import argparse
@@ -7,8 +7,8 @@ import numpy as np
 import scipy.misc
 import scipy.io
 
-def generate_depth_map(mesh_path):
-    mesh = pv.read(mesh_path)
+def generate_depth_map(mesh):
+
     plotter = pv.Plotter(off_screen=False, notebook=False)
     actor = plotter.add_mesh(mesh, color="grey")
     def clicked(event):
@@ -72,7 +72,7 @@ def generate_depth_map(mesh_path):
     n_cols = w
 
 
-    depth_map = capture_depth(mesh_path, P, K, n_rows, n_cols, False)
+    depth_map = capture_depth(mesh, P, K, n_rows, n_cols)
 
     return depth_map, K, P
 
@@ -89,8 +89,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     mesh_path = args.mesh
-
-    depth_map, K, P = generate_depth_map(mesh_path)
+    mesh = pv.read(mesh_path)
+    depth_map, K, P = generate_depth_map(mesh)
 
     # save as array
     np.savetxt(args.outIm, depth_map, delimiter=",")
