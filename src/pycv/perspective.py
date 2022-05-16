@@ -5,15 +5,8 @@ import scipy.linalg as la
 import cv2
 
 def solve_PnP(world, native, K, distCoeffs = np.array([[0, 0, 0, 0]]).astype("float32")):
-    if world.shape[0] > 4:
-        world = world[:4,:]
-        native = native[:4,:]
-    retval, rvec, tvec = cv2.solveP3P(world.astype("float32"), native.astype("float32"), K.astype("float32"),distCoeffs, flags=cv2.SOLVEPNP_P3P)
-    # as up to 4 solutions
-    rvec = rvec[1]
-    tvec = tvec[1]
-    print(rvec)
-    print(tvec)
+    retval, rvec, tvec = cv2.solvePnP(world.astype("float32"), native.astype("float32"), K.astype("float32"),distCoeffs)
+
     R, _ = cv2.Rodrigues(rvec)
     T = tvec
     camera_extrinsic_matrix = np.hstack((R,T))

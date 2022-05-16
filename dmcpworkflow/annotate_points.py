@@ -9,7 +9,7 @@ def annotate(image_im, image_dm):
     """origin bottom left """
     def draw(ax: plt.Axes, im: np.ndarray, points, orig="upper"):
         #print(im)
-        ax.imshow(im, origin=orig, cmap=cc.cm.get("gouldian_r"))
+        ax.imshow(im, origin=orig, cmap=cc.cm.get("viridis_r"))
         if len(points) != 0:
             points = np.array(points)
             ax.scatter(points[:,0], points[:,1],c="cyan", marker="x")
@@ -17,12 +17,10 @@ def annotate(image_im, image_dm):
                 ax.annotate(str(i+1),points[i,:],bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=1),xytext=(points[i,0]+15, points[i,1]+15))
         ax.figure.canvas.draw()
 
-    image_dm = image_dm[-1:0:-1,:]
-
     plt.figure()
     im_ax = plt.gca()
     points_im = []
-    draw(im_ax, image_im, points_im, "lower")
+    draw(im_ax, image_im, points_im, "upper")
 
     plt.figure()
     dm_ax = plt.gca()
@@ -50,7 +48,7 @@ def annotate(image_im, image_dm):
                     print("cannot select, value is nan")
                 
 
-    im_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, im_ax, image_im, points_im, "lower"))
+    im_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, im_ax, image_im, points_im, "upper"))
     dm_ax.figure.canvas.mpl_connect('button_press_event', lambda event: on_click(event, dm_ax, image_dm, points_dm, "upper"))
 
     plt.show(block=True)
@@ -77,8 +75,8 @@ if __name__ == "__main__":
     path_cps = args.out
 
     # read images and set origin to bottom left
-    image_im = np.loadtxt(path_im, delimiter=",")[-1:0:-1,:]
-    image_dm = np.loadtxt(path_dm, delimiter=",")[-1:0:-1,:]
+    image_im = np.loadtxt(path_im, delimiter=",")
+    image_dm = np.loadtxt(path_dm, delimiter=",")
 
     cps = annotate(image_im, image_dm)
 

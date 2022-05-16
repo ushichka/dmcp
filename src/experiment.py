@@ -46,5 +46,5 @@ class Experiment:
         return cps
 
     def load_imIm(self):
-        imIm = np.loadtxt(self.path_imIm, delimiter=",")[-1:0:-1,:]
+        imIm = np.loadtxt(self.path_imIm, delimiter=",")
         return imIm
