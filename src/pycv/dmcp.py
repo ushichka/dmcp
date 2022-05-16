@@ -1,7 +1,7 @@
 from turtle import distance
 import numpy as np
 import scipy.linalg as la
-from src.pycv.perspective import solve_PnP, horn_affine_transformation
+from src.pycv.perspective import calibrate_dlt, solve_PnP, horn_affine_transformation
 
 def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndarray):
     if dmP.shape != (3,4):
@@ -54,6 +54,11 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
 
     # DMCP Step 1 calibrate camera in world space using annotations
     pose_matrix = solve_PnP(box_world,box_native_x_native,K_native)
+    #P = calibrate_dlt(box_native_x_native, box_world)
+    #extr = la.inv(K_native) @ P
+    #extr_hat = np.vstack((extr,[0,0,0,1]))
+    #pose_matrix = la.inv(extr_hat)[:3,:]
+
     # estimated pose
     print("estimated pose"),
     print(pose_matrix)

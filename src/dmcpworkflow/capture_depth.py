@@ -1,5 +1,5 @@
 from PIL import Image
-from h_backproject_mesh import main as capture_depth
+from .h_backproject_mesh import main as capture_depth
 import math
 import pyvista as pv
 import argparse
