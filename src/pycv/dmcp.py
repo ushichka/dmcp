@@ -13,6 +13,10 @@ def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndar
     if dmPts.shape[1] != 2:
         raise Exception("dmPts must have 2 columns")
 
+    extrinsic_matrix = np.matmul(la.inv(dmK), dmP)
+    extrinsic_matrix_hat = np.vstack((extrinsic_matrix,[0,0,0,1]))
+        
+    pose_matrix = la.inv(extrinsic_matrix_hat)[:3,:] 
 
     world_points = []
     for i in range(dmPts.shape[0]):
@@ -22,10 +26,6 @@ def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndar
         pt_camera_space_hat = np.append(pt_camera_space, 1)
         #print(f"dist {distance} cam_hat {pt_camera_space_hat}")
 
-        extrinsic_matrix = np.matmul(la.inv(dmK), dmP)
-        extrinsic_matrix_hat = np.vstack((extrinsic_matrix,[0,0,0,1]))
-        
-        pose_matrix = la.inv(extrinsic_matrix_hat)[:3,:]
         pt_world_space = np.matmul(pose_matrix, pt_camera_space_hat)
 
         world_points.append(pt_world_space)

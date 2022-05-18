@@ -13,7 +13,10 @@ def trans_to_matrix(trans):
 
 
 def make_vtk_camera(w, h, intrinsic, extrinsic, plotter):
-    """reference: https://github.com/pyvista/pyvista/issues/1215"""
+    """
+    reference: https://github.com/pyvista/pyvista/issues/1215
+    ksimek.github.io calibrated_cameras_in_opengl
+    """
 
     plotter.window_size = [w, h]
 
@@ -25,14 +28,14 @@ def make_vtk_camera(w, h, intrinsic, extrinsic, plotter):
     cy = intrinsic[1, 2]
     f = intrinsic[0, 0]
 
-    # convert the principal point to window center (normalized coordinate system) and set it
-    wcx = -2*(cx - float(w)/2) / w
-    wcy = 2*(cy - float(h)/2) / h
-    plotter.camera.SetWindowCenter(wcx, wcy)
+    wcx = -2.0 / w * cx + 1
+    wcy = 2.0 / h * cy - 1
 
-    # convert the focal length to view angle and set it
-    view_angle = 180 / math.pi * (2.0 * math.atan2(h/2.0, f))
+    plotter.camera.SetWindowCenter(wcx,wcy)
+
+    view_angle = 180 / math.pi * (2.0 * math.atan2(h / 2.0, f))
     plotter.camera.SetViewAngle(view_angle)
+
 
     #
     # extrinsics
@@ -54,15 +57,9 @@ def make_vtk_camera(w, h, intrinsic, extrinsic, plotter):
     # near/far plane
     #
 
-    # ensure the relevant range of depths are rendered
-    # depth_min = 0.1
-    # depth_max = 100
-    # p.camera.SetClippingRange(depth_min, depth_max)
-    # # depth_min, depth_max = p.camera.GetClippingRange()
     plotter.renderer.ResetCameraClippingRange()
 
-    # p.show()
-    # p.render()
+    plotter.render()
     plotter.store_image = True  # last_image and last_image_depth
 
 # generate depth map for all cameras
@@ -79,7 +76,7 @@ def capture_depth(mesh, P, K, n_rows, n_cols):
 
     plotter.show()
     depth_img = plotter.get_image_depth()
-    depth_img = depth_img * -1  # values are negative when read from plotter
+    depth_img = depth_img * -1  # values are negative when read from plotter, right handed
     return depth_img
 
     # set invalid to nan
