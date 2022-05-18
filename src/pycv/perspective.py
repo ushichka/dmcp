@@ -3,16 +3,81 @@ import numpy as np
 import math
 import scipy.linalg as la
 import cv2
+from itertools import combinations
 
 def solve_PnP(world, native, K, distCoeffs = np.array([[0, 0, 0, 0]]).astype("float32")):
-    retval, rvec, tvec = cv2.solvePnP(world.astype("float32"), native.astype("float32"), K.astype("float32"),distCoeffs)
 
-    R, _ = cv2.Rodrigues(rvec)
-    T = tvec
-    camera_extrinsic_matrix = np.hstack((R,T))
-    camera_extrinsic_matrix_hat = np.vstack((camera_extrinsic_matrix,[0,0,0,1]))
-    camera_pose_matrix = la.inv(camera_extrinsic_matrix_hat)[:3,:]
-    return camera_pose_matrix
+    # solveAP3P for all 3-combinations
+    pt_idx = range(len(list(world)))
+    combs = combinations(pt_idx,3)
+    possible_solutions = []
+    for comb in combs:
+        comb = list(comb)
+        world_batch = world[comb,:]
+        world_batch = np.ascontiguousarray(world_batch)
+        image_batch = native[comb,:]
+        image_batch = np.ascontiguousarray(image_batch).reshape((image_batch.shape[0],1,2))
+
+        distCoeffs = np.array([[0, 0, 0, 0]]).astype("float32")
+        retval, rvecs, tvecs = cv2.solveP3P(world_batch.astype("float32"), image_batch.astype("float32"), K.astype("float32"), distCoeffs, flags=cv2.SOLVEPNP_AP3P)
+
+        n_sol = len(rvecs)
+        for i in range(len(rvecs)):
+            possible_solutions.append((rvecs[i],tvecs[i]))
+
+    #print(f"found {len(possible_solutions)} solutions") 
+
+    # convert rotvec, tvec to camera pose
+    possible_poses = []
+    for sol in possible_solutions:
+        rvec, tvec = sol
+        R,_ = cv2.Rodrigues(rvec)
+        T = tvec
+        camera_extrinsic_matrix = np.hstack((R,T))
+        camera_extrinsic_matrix_hat = np.vstack((camera_extrinsic_matrix,[0,0,0,1]))
+        camera_pose_matrix = la.inv(camera_extrinsic_matrix_hat)[:3,:]
+        possible_poses.append(camera_pose_matrix)
+ 
+    #print(f"example pose:\n{possible_poses[0]}")
+
+    # reproject all world points into each pose
+    world_pts_hat = np.hstack((world, np.ones((world.shape[0],1)))).T
+    repr_errs = []
+    for i in range(len(possible_poses)):
+        pose = possible_poses[i]
+        pose_hat = np.vstack((pose,[0,0,0,1]))
+
+        extr = la.inv(pose_hat)[:3,:]
+        P = K @ extr
+
+        reprojected = P @ world_pts_hat
+        reprojected = reprojected.T
+        repr0 = reprojected[:,0] / reprojected[:,-1]
+        repr1 = reprojected[:,1] / reprojected[:,-1]
+        repr = np.vstack((repr0,repr1)).T
+        repr_err = np.sum(abs(repr - native))
+        repr_errs.append(repr_err)
+
+    repr_errs = np.array(repr_errs)
+
+    # select pose with best reprojection error
+    min_err = np.inf
+    min_i = None
+    for i in range(repr_errs.shape[0]):
+        err = repr_errs[i]
+        if err < min_err:
+            min_err = err
+            min_i = i
+
+    #print(f"best pose {min_i}, error {min_err}:\n{possible_poses[min_i]}")
+    best_pose = possible_poses[min_i]
+    return best_pose
+    
+
+
+
+
+
 
 def calibrate_dlt(img_pts, world_pts):
     """ each row one point """
