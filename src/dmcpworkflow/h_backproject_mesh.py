@@ -66,23 +66,7 @@ def make_vtk_camera(w, h, intrinsic, extrinsic, plotter):
 
 
 def capture_depth(mesh, P, K, n_rows, n_cols):
-    plotter = pv.Plotter(off_screen=True, notebook=False)
-    actor = plotter.add_mesh(mesh, color="grey")
 
-    E = la.inv(K) @ P[0:3, :]
-    E = np.vstack((E, [0, 0, 0, 1]))
-
-    make_vtk_camera(n_cols, n_rows, K, E, plotter)
-
-    plotter.show()
-    depth_img = plotter.get_image_depth()
-    depth_img = depth_img * -1  # values are negative when read from plotter, right handed
-    return depth_img
-
-    # set invalid to nan
-    # !Note: assumes maximum values are invalid!
-    y, x = np.where(depth_img == np.nanmax(depth_img))
-    depth_img[y, x] = np.nan
     return depth_img
 
 
