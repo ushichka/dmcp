@@ -15,7 +15,7 @@
 
 ### Python 
 Open up Python in your virtual environment and run these two commands.
-
+imageio.plugins.freeimage.download()
 ```
 >>> import julia
 >>> julia.install()

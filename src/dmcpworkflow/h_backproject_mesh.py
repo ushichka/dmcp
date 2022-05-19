@@ -1,96 +1,101 @@
 import numpy as np
+import pyrender
 import pyvista as pv
 import scipy.linalg as la
 import scipy.io as sio
 from scipy.signal import medfilt2d
+from scipy.spatial.transform import Rotation
 import argparse
 import math
 
+def extract_pyrender_pinhole(v: pyrender.Viewer):
+    cn : pyrender.Node = v._camera_node
+    
+    rot_quat = cn.rotation
+    rot_mat = Rotation.from_quat(rot_quat).as_matrix()
+    rote = [-180,0,0.0]
+    r_corr = Rotation.from_euler("xyz",rote, degrees=True).as_matrix() # pyrender uses different convention
+    rot_mat = rot_mat @ r_corr
+    trans = np.array([cn.translation]).T
+    pose = np.hstack((rot_mat, trans))
+    print(pose)
 
-def trans_to_matrix(trans):
-    """ Convert a numpy.ndarray to a vtk.vtkMatrix4x4 """
-    return pv.vtkmatrix_from_array(trans)
+    fx = cn.camera.fx
+    fy = cn.camera.fy
+    cx = cn.camera.cx
+    cy = cn.camera.cy
+    K = [
+        [fx, 0, cx],
+        [0, fy, cy],
+        [0, 0,  1]
+        ]
+    K = np.array(K)
+    return K, pose
 
+def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray):
+    scene = pyrender.Scene(ambient_light=np.ones(4))
+    _meshnode = scene.add(mesh)
+    cx = K[0, 2]
+    cy = K[1, 2]
+    fx = K[0, 0]
+    fy = K[1, 1]
 
-def make_vtk_camera(w, h, intrinsic, extrinsic, plotter):
-    """
-    reference: https://github.com/pyvista/pyvista/issues/1215
-    ksimek.github.io calibrated_cameras_in_opengl
-    """
+    cam = pyrender.camera.IntrinsicsCamera(fx=fx, fy=fy, cx=cx, cy=cy,znear=10, zfar=10000000.0)
+    r = Rotation.from_euler("xyz",[180,0,0.0], degrees=True).as_matrix()
+    t = np.array([[0,0,0]]).T
+    pose = np.hstack((r,t))
+    pose = np.vstack((pose,[0,0,0,1]))
+    scene.add(cam,pose=pose)
 
-    plotter.window_size = [w, h]
+    v = pyrender.Viewer(scene, run_in_thread=True)
 
+    while v.is_active:
+        pass
+
+    
+
+    K, pose = extract_pyrender_pinhole(v)
+    return K, pose
+
+def capture_scene(mesh: pyrender.Mesh, K: np.ndarray, R: np.ndarray, T: np.ndarray, width: int, height: int):
+    intrinsics = K
+    cx = intrinsics[0, 2]
+    cy = intrinsics[1, 2]
+    fx = intrinsics[0, 0]
+    fy = intrinsics[1, 1]
+    cam = pyrender.IntrinsicsCamera(fx = fx, fy =fy, cx=cx, cy=cy,znear=10, zfar=10000000.0)
+    cam_orig = cam
+    rote = [180,0,0.0]
+    r = Rotation.from_euler("xyz",rote, degrees=True).as_matrix()
+    r = R @ r
+    t = np.array([T]).T
+    print(r)
+    print(t)
+    pose = np.hstack((r,t))
+    pose = np.vstack((pose,[0,0,0,1]))
     #
-    # intrinsics
-    #
+    #print(cam_pose_orig)
+    #print(pose)
 
-    cx = intrinsic[0, 2]
-    cy = intrinsic[1, 2]
-    f = intrinsic[0, 0]
-
-    wcx = -2.0 / w * cx + 1
-    wcy = 2.0 / h * cy - 1
-
-    plotter.camera.SetWindowCenter(wcx,wcy)
-
-    view_angle = 180 / math.pi * (2.0 * math.atan2(h / 2.0, f))
-    plotter.camera.SetViewAngle(view_angle)
+    #==============================================================================
+    l = 1.0
+    scene = pyrender.Scene(ambient_light=np.array([l, l, l, l]))
+    #cam_node = scene.add(cam_orig, pose=cam_pose_orig)
+    cam_node = scene.add(cam_orig, pose=pose)
 
 
-    #
-    # extrinsics
-    #
+    #==============================================================================
+    # Rendering offscreen from that camera
+    #==============================================================================
 
-    # apply the transform to scene objects
-    plotter.camera.SetModelTransformMatrix(trans_to_matrix(extrinsic))
+    meshnode = scene.add(mesh)
+    #v = Viewer(scene, central_node=drill_node)
+    s = 3
+    r = pyrender.OffscreenRenderer(viewport_width=width, viewport_height=height)
+    color, depth = r.render(scene)
+    r.delete()
 
-    # the camera can stay at the origin because we are transforming the scene objects
-    plotter.camera.SetPosition(0, 0, 0)
-
-    # look in the +Z direction of the camera coordinate system
-    plotter.camera.SetFocalPoint(0, 0, 1)
-
-    # the camera Y axis points down
-    plotter.camera.SetViewUp(0, -1, 0)
-
-    #
-    # near/far plane
-    #
-
-    plotter.renderer.ResetCameraClippingRange()
-
-    plotter.render()
-    plotter.store_image = True  # last_image and last_image_depth
-
-# generate depth map for all cameras
-
-
-def capture_depth(mesh, P, K, n_rows, n_cols):
-
-    return depth_img
-
-
-def filter_nan(I):
-    I = I.copy()
-    I = medfilt2d(I, 5)
-
-    mask = np.isnan(I)
-    I[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), I[~mask])
-    return I
-
-
-def main(filename, P, K, n_rows, n_cols, fn=True):
-    mesh = pv.read(filename)  # example r'data/formatted/lidar_roi.ply'
-    depth_img = capture_depth(mesh, P, K, n_rows, n_cols)
-    if fn:
-        depth_img = filter_nan(depth_img)
-
-    return depth_img
-
-
-def toNpMatrix(string):
-    return eval("np.array("+string+")")
-
+    return np.asarray(color), np.asarray(depth)
 
 if __name__ == "__main__":
 
