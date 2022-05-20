@@ -55,7 +55,10 @@ def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray):
     
 
     K, pose = extract_pyrender_pinhole(v)
-    return K, pose
+    height = v.height
+    width = v.width
+    shape = (height, width)
+    return K, pose, shape
 
 def capture_scene(mesh: pyrender.Mesh, K: np.ndarray, R: np.ndarray, T: np.ndarray, width: int, height: int):
     intrinsics = K
