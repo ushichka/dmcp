@@ -32,7 +32,7 @@ def extract_pyrender_pinhole(v: pyrender.Viewer):
     K = np.array(K)
     return K, pose
 
-def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray):
+def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray, znear=1,zfar=1000):
     scene = pyrender.Scene(ambient_light=np.ones(4))
     _meshnode = scene.add(mesh)
     cx = K[0, 2]
@@ -40,17 +40,15 @@ def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray):
     fx = K[0, 0]
     fy = K[1, 1]
 
-    cam = pyrender.camera.IntrinsicsCamera(fx=fx, fy=fy, cx=cx, cy=cy,znear=10, zfar=10000000.0)
+    cam = pyrender.camera.IntrinsicsCamera(fx=fx, fy=fy, cx=cx, cy=cy,znear=znear, zfar=zfar)
     r = Rotation.from_euler("xyz",[180,0,0.0], degrees=True).as_matrix()
     t = np.array([[0,0,0]]).T
     pose = np.hstack((r,t))
     pose = np.vstack((pose,[0,0,0,1]))
-    scene.add(cam,pose=pose)
-
-    v = pyrender.Viewer(scene, run_in_thread=True)
-
-    while v.is_active:
-        pass
+    cam_node = scene.add(cam)
+    v = pyrender.Viewer(scene, central_node=cam_node,use_raymond_lighting=True)
+    #while v.is_active:
+    #    pass
 
     
 
@@ -60,13 +58,13 @@ def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray):
     shape = (height, width)
     return K, pose, shape
 
-def capture_scene(mesh: pyrender.Mesh, K: np.ndarray, R: np.ndarray, T: np.ndarray, width: int, height: int):
+def capture_scene(mesh: pyrender.Mesh, K: np.ndarray, R: np.ndarray, T: np.ndarray, width: int, height: int,znear=1,zfar=1000):
     intrinsics = K
     cx = intrinsics[0, 2]
     cy = intrinsics[1, 2]
     fx = intrinsics[0, 0]
     fy = intrinsics[1, 1]
-    cam = pyrender.IntrinsicsCamera(fx = fx, fy =fy, cx=cx, cy=cy,znear=10, zfar=10000000.0)
+    cam = pyrender.IntrinsicsCamera(fx = fx, fy =fy, cx=cx, cy=cy,znear=znear, zfar=zfar)
     cam_orig = cam
     rote = [180,0,0.0]
     r = Rotation.from_euler("xyz",rote, degrees=True).as_matrix()

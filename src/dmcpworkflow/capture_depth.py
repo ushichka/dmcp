@@ -8,11 +8,13 @@ import scipy.misc
 import scipy.io
 import scipy.linalg as la
 
-def generate_depth_map(mesh,imK):
-    K, pose, shape = get_interactive_camera(mesh,imK)
-    img, depth = capture_scene(mesh, imK, pose[:3,:3], pose[:3,-1], shape[1], shape[0])
+def generate_depth_map(mesh,imK,znear=1,zfar=1000,return_img=False):
+    K, pose, shape = get_interactive_camera(mesh,imK,znear=znear,zfar=zfar)
+    img, depth = capture_scene(mesh, K, pose[:3,:3], pose[:3,-1], shape[1], shape[0],znear=znear,zfar=zfar)
     extr = la.inv(np.vstack((pose,[0,0,0,1])))[:3,:]
     P = K @ extr
+    if return_img==True:
+        return img, depth, K, P
     return depth, K, P
 
 if __name__ == "__main__":
