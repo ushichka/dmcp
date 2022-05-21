@@ -9,6 +9,7 @@ import os
 import numpy as np
 from pathlib import Path
 from scipy.io import loadmat
+import cv2
 
 def loadImage(camera,image, data_root):
     camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
@@ -26,6 +27,13 @@ def loadImage(camera,image, data_root):
     im = np.loadtxt(path_img,
                  delimiter=",", dtype=np.float32)
     return im, path_img
+
+def loadImageUndistorted(camera, image, data_root):
+    image_distorted, _imPath = loadImage(camera, image, data_root)
+    imK, _imP = loadCalibration(camera,data_root)
+    dist = np.array([-0.3069,0.1134,0,0])
+    dst = cv2.undistort(image_distorted,imK,dist,None,imK)
+    return dst
     
 
 

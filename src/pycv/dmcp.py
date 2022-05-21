@@ -36,7 +36,7 @@ def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndar
 
 
 
-def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndarray, box_world: np.ndarray):
+def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndarray, box_world: np.ndarray, return_raw_pose=False):
     # box is annotated points
     if P_native.shape != (3,4):
         raise Exception(f"P_native shape must be 3,4 bit is {P_native.shape}")
@@ -71,6 +71,7 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
 
     # DMCP Step 1 calibrate camera in world space using annotations
     pose_matrix = solve_PnP(box_world,box_native_x_native,K_native)
+    raw_pose = pose_matrix.copy()
     #P = calibrate_dlt(box_native_x_native, box_world)
     #extr = la.inv(K_native) @ P
     #extr_hat = np.vstack((extr,[0,0,0,1]))
@@ -91,8 +92,7 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
 
     box_world_hat = np.hstack((box_world, np.ones((box_world.shape[0],1))))
 
-    box_world_camera = np.matmul(extrinsic_matrix_world, box_world_hat.T).T * scale_factor
-
+    box_world_camera = np.matmul(extrinsic_matrix_world, box_world_hat.T).T
 
     # DMCP Step 2.2 transform camera points into native space
     extrinsic_matrix_native = np.matmul(la.inv(K_native), P_native) 
@@ -108,5 +108,8 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
     A_tf = horn_affine_transformation(box_native_tf, box_world)
 
     A_tf_hat = np.vstack((A_tf,[0,0,0,1]))
+
+    if return_raw_pose:
+        return raw_pose, A_tf_hat
 
     return A_tf_hat
