@@ -34,7 +34,6 @@ def extract_pyrender_pinhole(v: pyrender.Viewer):
 
 def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray, znear=1,zfar=1000):
     scene = pyrender.Scene(ambient_light=np.ones(4))
-    _meshnode = scene.add(mesh)
     cx = K[0, 2]
     cy = K[1, 2]
     fx = K[0, 0]
@@ -45,8 +44,9 @@ def get_interactive_camera(mesh: pyrender.Mesh, K :np.ndarray, znear=1,zfar=1000
     t = np.array([[0,0,0]]).T
     pose = np.hstack((r,t))
     pose = np.vstack((pose,[0,0,0,1]))
-    cam_node = scene.add(cam)
-    v = pyrender.Viewer(scene, central_node=cam_node,use_raymond_lighting=True)
+    cam_node = scene.add(cam,pose=pose)
+    _meshnode = scene.add(mesh)
+    v = pyrender.Viewer(scene,use_raymond_lighting=True)
     #while v.is_active:
     #    pass
 
