@@ -3,6 +3,7 @@ import numpy as np
 import scipy.linalg as la
 from sklearn.preprocessing import scale
 from src.pycv.perspective import calibrate_dlt, solve_PnP, horn_affine_transformation
+import cv2
 
 def dm_to_world(dm: np.ndarray, dmK: np.ndarray, dmP: np.ndarray, dmPts: np.ndarray):
     if dmP.shape != (3,4):
@@ -91,7 +92,6 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
     print(f"scale factor {scale_factor}")
 
     box_world_hat = np.hstack((box_world, np.ones((box_world.shape[0],1))))
-
     box_world_camera = np.matmul(extrinsic_matrix_world, box_world_hat.T).T
 
     # DMCP Step 2.2 transform camera points into native space
@@ -107,8 +107,12 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
 
     A_tf = horn_affine_transformation(box_native_tf, box_world)
 
+    retval, scale = cv2.estimateAffine3D(box_native_tf, box_world,force_rotation=False)
+    A_tf = retval
+
     A_tf_hat = np.vstack((A_tf,[0,0,0,1]))
 
+    #print("retval\n",retval,"scale\n", scale)
     if return_raw_pose:
         return raw_pose, A_tf_hat
 
