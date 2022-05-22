@@ -109,6 +109,7 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
 
     retval, scale = cv2.estimateAffine3D(box_native_tf, box_world,force_rotation=False)
     A_tf = retval
+    A_tf[:3,:3] = A_tf[:3,:3]* scale_factor
 
     A_tf_hat = np.vstack((A_tf,[0,0,0,1]))
 
