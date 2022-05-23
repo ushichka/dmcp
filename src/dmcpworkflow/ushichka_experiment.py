@@ -32,7 +32,8 @@ def ushichka_experiment(ushichka_dir, mesh_path, experiment_dir,cam,step):
 
     if step == None or step == 2:
         exp.compute_reprojection_error()
-        exp.visualize_reprojection()
+        plt.show()
+        #exp.visualize_reprojection()
 
 @click.command()
 @click.argument('ushichka_dir',
@@ -42,7 +43,7 @@ def ushichka_experiment(ushichka_dir, mesh_path, experiment_dir,cam,step):
 @click.argument('mesh_path',
               type=click.Path(exists=True))
 @click.argument('experiment_dir',
-              type=click.Path(exists=True))
+              type=click.Path(exists=False))
 @click.option("--step", default=None, type=click.IntRange(0,2))
 
 def cli(ushichka_dir,cam, mesh_path, experiment_dir,step):
