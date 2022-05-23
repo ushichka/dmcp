@@ -21,22 +21,18 @@ plt.figure()
 plt.imshow(imIm)
 plt.show()
 
-from src.dmcpworkflow.capture_depth import generate_depth_map
 mesh_path = "/home/julian/code/uni/ushichka-registration/data/formatted/lidar_roi.ply"
-print("reading mesh")
-ovMesh = pr.Mesh.from_trimesh(tr.load_mesh(mesh_path))
 
+experiment_dir = "/tmp/exp"
 
-#%% Visualize Mesh
+#%% setup experiment
+from src.experiment import Experiment
+exp = Experiment(experiment_dir, mesh_path)
+exp.save_imIm(imIm)
+exp.save_imK(imK)
+exp.save_imP(imP)
 
-#s = pr.Scene()
-#s.add(ovMesh)
-#l = pr.light.PointLight(color=(0.5,0.25,0.125),intensity=15)
-#s.add(l)
-#
-#v = pr.Viewer(s)
+exp.exec_dmcp()
 
+exp.visualize_dmcp()
 
-#%% dmcp workflow
-print("generating depth map")
-dmIm, dmK, dmP = generate_depth_map(ovMesh,imK,znear=0.00001,zfar=100)
