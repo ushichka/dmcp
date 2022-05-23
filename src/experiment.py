@@ -1,5 +1,6 @@
 from argparse import ArgumentError
 import os
+from cv2 import imread
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -10,6 +11,8 @@ np.set_printoptions(formatter={"float": "{:10.2f}".format})
 import trimesh as tr
 import pyrender as pr
 import hashlib
+import math
+import colorcet as cc
 import click
 
 from src.dmcpworkflow.capture_depth import generate_depth_map
@@ -161,7 +164,7 @@ class Experiment:
 
         self.save_transform(trans)
 
-    def visualize_dmcp(self):
+    def visualize_3D(self):
         dmIm = self.load_dmIm()
         dmK = self.load_dmK()
         dmP = self.load_dmP()
@@ -177,7 +180,6 @@ class Experiment:
         position_est = pose_est[:3].flatten()
         print(position_est)
 
-
         sv_pos_est = pv.Sphere(radius=0.25, center=position_est)
         pvMesh = pv.read(self.mesh_path)
         pvPts = pv.PolyData(pts_world)
@@ -187,17 +189,96 @@ class Experiment:
         pl.add_mesh(sv_pos_est, color="yellowgreen")
         pl.show()
 
+    
+    def visualize_reprojection(self,block=True):
+        imScatter = iio.imread(self.path_reprScatter)
+        imBar = iio.imread(self.path_reprBar)
+
+        plt.figure(567)
+        plt.subplot(1,2,1)
+        plt.imshow(imScatter,origin="upper")
+        plt.subplot(1,2,2)
+        plt.imshow(imBar,origin="upper")
+        plt.axis("off")
+        plt.show(block=block)
+
+    def compute_reprojection_error(self):
+        dmIm = self.load_dmIm()
+        dmK = self.load_dmK()
+        dmP = self.load_dmP()
+        cps = self.load_cps()
+        imP = self.load_imP()
+        imIm = self.load_imIm()
+        trans = self.load_transform()
+        imP = np.vstack((imP,np.array([0,0,0,1])))
+
+        def dm_point_to_camera_point(x,y): 
+            pointline = np.matmul(la.inv(dmK), np.array([x, y, 1]))
+            depth = dmIm[round(y), round(x)]
+            return depth * pointline
+
+        def extract_camera_pose_matrix(K,P):
+            cam_ext_matrix = np.matmul(la.inv(K) ,P)
+            cam_ext_matrix = np.vstack((cam_ext_matrix,np.array([0,0,0,1])))
+            cam_pose_matrix = la.inv(cam_ext_matrix)
+            cam_pose_matrix = cam_pose_matrix[0:3, :]
+            return cam_pose_matrix
+        def camera_point_to_world_point(px,py,pz, K, P):
+            wp = np.matmul(extract_camera_pose_matrix(K,P), np.array([px, py, pz, 1]))
+            return wp
+
+        annotated_camera_points = [dm_point_to_camera_point(cps[i,2],cps[i,3]) for i in range(cps.shape[0])]
+        annotated_world_points = [camera_point_to_world_point(p[0],p[1],p[2],dmK,dmP) for p in annotated_camera_points]
+
+        # convert camera Projection matrix using estimated transform
+        P_world_space_hat = np.matmul(imP, la.inv(trans))
+        P_world_space = P_world_space_hat[:3,:]
+
+        ns = la.null_space(P_world_space)
+        ns = ns / ns[-1]
+
+        # backproject annotated points to estimated camera
+        projs_hat = [np.matmul(P_world_space, np.array([p[0], p[1], p[2], 1])) for p in annotated_world_points ]
+        projs = [np.array([p[0], p[1]]) / p[2] for p in projs_hat]
+        #projs = np.array(projs)
+
+        # reprojection error
+        repr_err = [ math.sqrt((projs[i][0] - cps[i,0])**2 + (projs[i][1] - cps[i,1])**2) for  i in range(len(projs))]
+        projs = np.array(projs)
+
+        # save reprojection error
+        np.savetxt(self.path_reprErrs, np.array(repr_err),fmt="%05.2f")
+
+        # visualize
+        ## scatter
+        fig = plt.figure()
+        plt.imshow(imIm,origin="upper",cmap=cc.cm.gouldian)
+        plt.scatter(cps[:,0], cps[:,1],marker="o", c="green", label="original annotation")
+        plt.scatter(projs[:,0],projs[:,1], marker="x", c="red", label="backprojected annotation")
+        plt.axis('off')
+        plt.savefig(self.path_reprScatter,bbox_inches="tight",dpi=150)
+
+        ## Bar
+        plt.figure()
+        plt.bar(np.arange(len(repr_err)), repr_err, label="reprojection error")
+        #plt.legend(loc="upper right")
+        plt.axis("image")
+        plt.savefig(self.path_reprBar, bbox_inches="tight",dpi=150)
+
 @click.command()
 @click.argument("expdir", type=click.Path(exists=True),required=False)
 @click.option("--mesh", type=click.Path(exists=True),required=True)
-@click.option("--show", is_flag=True, default=False, help="visualize experiment")
+@click.option('--repr', 'show', flag_value='repr')
+@click.option('--pose', 'show', flag_value='pose')
 def cli(expdir, mesh, show):
     if expdir == None:
         expdir = os.getcwd()
 
     exp = Experiment(expdir, mesh)
-    if show:
-        exp.visualize_dmcp()
-
+    if show == "repr":
+        exp.visualize_reprojection(True)
+    if show == "pose":
+        exp.visualize_3D()
+        
 if __name__ == "__main__":
     cli()
