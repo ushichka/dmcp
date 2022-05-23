@@ -10,21 +10,19 @@ np.set_printoptions(formatter={"float": "{:10.2f}".format})
 import trimesh as tr
 import pyrender as pr
 import hashlib
+import click
 
 from src.dmcpworkflow.capture_depth import generate_depth_map
 from src.dmcpworkflow.annotate_points import annotate
 from src.pycv.dmcp import dm_to_world
 from src.pycv.dmcp import dmcp
-                
+
 
 class Experiment:
 
     def __init__(self, dir,mesh_path) -> None:
         self.mesh_path = mesh_path
         self.exp_dir = dir
-
-        if not os.path.isdir(dir):
-            os.makedirs(dir)
 
         self.path_lidar_hash = dir + os.sep + "lidar_hash.md5"
         ## captured images for depth map
@@ -188,3 +186,18 @@ class Experiment:
         pl.add_mesh(pvPts, color="lightblue", render_points_as_spheres=True,point_size=25)
         pl.add_mesh(sv_pos_est, color="yellowgreen")
         pl.show()
+
+@click.command()
+@click.argument("expdir", type=click.Path(exists=True),required=False)
+@click.option("--mesh", type=click.Path(exists=True),required=True)
+@click.option("--show", is_flag=True, default=False, help="visualize experiment")
+def cli(expdir, mesh, show):
+    if expdir == None:
+        expdir = os.getcwd()
+
+    exp = Experiment(expdir, mesh)
+    if show:
+        exp.visualize_dmcp()
+
+if __name__ == "__main__":
+    cli()
