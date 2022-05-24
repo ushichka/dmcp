@@ -95,7 +95,7 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
     box_world_camera = np.matmul(extrinsic_matrix_world, box_world_hat.T).T * scale_factor
 
     # DMCP Step 2.2 transform camera points into native space
-    extrinsic_matrix_native = np.matmul(la.inv(K_native), P_native) 
+    extrinsic_matrix_native = np.matmul(la.inv(K_native), P_native)
     extrinsic_matrix_native_hat = np.vstack((extrinsic_matrix_native,[0,0,0,1]))
     pose_matrix = la.inv(extrinsic_matrix_native_hat)
     camera_pose_matrix_native = pose_matrix
@@ -104,10 +104,10 @@ def dmcp(K_native: np.ndarray,P_native: np.ndarray, box_native_x_native: np.ndar
     box_native_tf = np.matmul(camera_pose_matrix_native, box_world_camera_hat.T).T[:,:3]
 
     # DMCP Step 2.3
-
     retval, scale = cv2.estimateAffine3D(box_native_tf, box_world,force_rotation=True)
     A_tf = retval
-    A_tf[:3,:3] = A_tf[:3,:3] * scale
+    A_tf[:3,:3] = A_tf[:3,:3]* scale
+    print(scale)
 
     A_tf_hat = np.vstack((A_tf,[0,0,0,1]))
 
