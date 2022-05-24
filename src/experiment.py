@@ -120,7 +120,7 @@ class Experiment:
 
 # METHODS
 
-    def exec_dmcp(self):
+    def exec_dmcp(self, step=None):
 
         imIm = self.load_imIm()
         imK = self.load_imK()
@@ -185,8 +185,8 @@ class Experiment:
         pvPts = pv.PolyData(pts_world)
         pl = pv.Plotter(notebook=False)
         pl.add_mesh(pvMesh, color="dimgrey")
-        pl.add_mesh(pvPts, color="lightblue", render_points_as_spheres=True,point_size=25)
-        pl.add_mesh(sv_pos_est, color="yellowgreen")
+        pl.add_mesh(pvPts, color="green", render_points_as_spheres=True,point_size=25)
+        pl.add_mesh(sv_pos_est, color="blue")
         pl.show()
 
     
