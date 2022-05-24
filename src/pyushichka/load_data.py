@@ -10,6 +10,7 @@ import numpy as np
 from pathlib import Path
 from scipy.io import loadmat
 import cv2
+import scipy.linalg as la
 
 def loadImage(camera,image, data_root):
     camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
@@ -36,6 +37,17 @@ def loadImageUndistorted(camera, image, data_root):
     return dst
     
 
+def fix_rotation(K,P):
+    extrinsic = la.inv(K) @ P
+    eRot = extrinsic[:3,:3].copy()
+    scale = [la.norm(eRot[:3,0]),la.norm(eRot[:3,1]),la.norm(eRot[:3,2])]
+    scale = la.norm(scale) / la.norm(np.ones(3))
+    eRot[:3,:3] = eRot[:3,:3] / scale
+    eRot[:3,0] = -eRot[:3,0]
+    extrinsic_fixed = np.hstack((eRot,np.array([extrinsic[:3,-1]]).T))
+    P_fixed = K @ extrinsic_fixed
+    return P_fixed
+
 
 def loadCalibration(i, data_root):
     """ Uses calibration round 1
@@ -58,6 +70,8 @@ def loadCalibration(i, data_root):
 
     K = extractIntrinsics(i, file_easyWand)
     P = extractProjection(i, path_dltCoefs)
+
+    #P = fix_rotation(K,P)
 
     return K,P
     #print(K)
