@@ -11,7 +11,7 @@ from pathlib import Path
 from scipy.io import loadmat
 import cv2
 import scipy.linalg as la
-import mat73
+import pathlib
 
 def loadImage(camera,image, data_root):
     camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
@@ -33,7 +33,7 @@ def loadImage(camera,image, data_root):
 def loadImageUndistorted(camera, image, data_root):
     image_distorted, _imPath = loadImage(camera, image, data_root)
     imK, _imP = loadCalibration(camera,data_root)
-    dist = np.array([-0.3069,0.1134,0,0])
+    dist = np.array([-0.3069,0.1134,0,0]) # in the opencv format [k1, k2, p1, p2, k3]) 
     dst = cv2.undistort(image_distorted,imK,dist,None,imK)
     return dst
     
@@ -67,8 +67,9 @@ def loadCalibration(i, data_root):
         Usage: from pyushichka import loadCalibration
         IMPORTANT: ´~/´ expansion does currently **NOT** work!
     """
-    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round4" #TODO: use last intead of 1
-    path_dltCoefs = list(Path(path_calib_out).rglob('*_dltCoefs.csv'))[-1] # use last for legacy reasons
+    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output"
+    path_calib_out = list(pathlib.Path(path_calib_out).glob('round*'))[-1]
+    path_dltCoefs = list(Path(path_calib_out).rglob('*_dltCoefs.csv'))[-1] # use newest
     path_easyWand = list(Path(path_calib_out).rglob('*_easyWandData.mat'))[-1]
     #extractIntrinsics()
     #print(date)
