@@ -11,6 +11,7 @@ from pathlib import Path
 from scipy.io import loadmat
 import cv2
 import scipy.linalg as la
+import mat73
 
 def loadImage(camera,image, data_root):
     camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
@@ -39,22 +40,34 @@ def loadImageUndistorted(camera, image, data_root):
 
 def fix_rotation(K,P):
     extrinsic = la.inv(K) @ P
-    eRot = extrinsic[:3,:3].copy()
-    scale = [la.norm(eRot[:3,0]),la.norm(eRot[:3,1]),la.norm(eRot[:3,2])]
-    scale = la.norm(scale) / la.norm(np.ones(3))
-    eRot[:3,:3] = eRot[:3,:3] / scale
-    eRot[:3,0] = -eRot[:3,0]
-    extrinsic_fixed = np.hstack((eRot,np.array([extrinsic[:3,-1]]).T))
+    shifter_mat = np.row_stack(([1,0,0],
+                                [0,1,0],
+                                [0,0,-1]))
+
+    eRot = extrinsic[:3,:3] 
+
+    eRot = eRot @ shifter_mat
+
+
+    print(eRot, "\n",extrinsic[:3,-1])
+    extrinsic_fixed = np.hstack((eRot, np.array([extrinsic[:3,-1]]).T))
     P_fixed = K @ extrinsic_fixed
+    
+    P_fixed = P.copy()
+    P_fixed[:3,:3] = P_fixed[:3,:3] @ shifter_mat
+
     return P_fixed
 
+def print_det(K,P):
+    extrinsic = la.inv(K) @ P
+    print("determinant",la.det(extrinsic[:3,:3]))
 
 def loadCalibration(i, data_root):
     """ Uses calibration round 1
         Usage: from pyushichka import loadCalibration
         IMPORTANT: ´~/´ expansion does currently **NOT** work!
     """
-    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round1" #TODO: use last intead of 1
+    path_calib_out = data_root + os.sep + "video_calibration" +os.sep + "calibration_output" + os.sep + "round4" #TODO: use last intead of 1
     path_dltCoefs = list(Path(path_calib_out).rglob('*_dltCoefs.csv'))[-1] # use last for legacy reasons
     path_easyWand = list(Path(path_calib_out).rglob('*_easyWandData.mat'))[-1]
     #extractIntrinsics()
@@ -65,13 +78,13 @@ def loadCalibration(i, data_root):
     #    file_dvProject = file_dvProject['udExport/data']
 
     file_easyWand = loadmat(path_easyWand, struct_as_record = False,squeeze_me=True)['easyWandData']
-    
     #print(file_easyWand.principalPoints)
 
     K = extractIntrinsics(i, file_easyWand)
-    P = extractProjection(i, path_dltCoefs)
-
+    P = extractProjection(i, file_easyWand)
+    #print_det(K,P)
     #P = fix_rotation(K,P)
+    #print_det(K,P)
 
     return K,P
     #print(K)
@@ -93,13 +106,149 @@ def extractIntrinsics(i, wand):
     K = np.array(K).astype(np.float32)
     return K
 
-def extractProjection(i, path_dltCoefs):
-    arr = np.loadtxt(path_dltCoefs,
-                 delimiter=",", dtype=np.float32)
+def extractProjection(i, wand):
+    #arr = np.loadtxt(path_dltCoefs,
+    #             delimiter=",", dtype=np.float32)
     
-    P = np.append(arr[:,i],[1])
-    P = np.reshape(P,(3,4))
+    def cam_centre_from_dlt(coefs):
+        '''
+        
+        
+        Reference
+        ---------
+        * http://www.kwon3d.com/theory/dlt/dlt.html Equation 25
+        '''
+            
+        m1 = np.array([[coefs[0],coefs[1],coefs[2]],
+                    [coefs[4],coefs[5],coefs[6]],
+                    [coefs[8],coefs[9],coefs[10]]])
+        m2 = np.array([-coefs[3], -coefs[7], -1]).T
 
-    #np.set_printoptions(precision=3, suppress=True)
+        xyz = np.matmul(np.linalg.inv(m1),m2)
+        return xyz
+
+    def transformation_matrix_from_dlt(coefs):
+        '''
+        Based on the DLTcameraPosition.m function written by Ty Hedrick. 
+        
+        Parameters
+        ----------
+        coefs : (11,Ncamera) np.array
+        
+        Returns
+        -------
+        T : (4,4) np.array
+            Transformation matrix
+        Z : float
+            Distance of camera centre behind image plane
+        ypr : (3,) np.array
+            yaw, pitch, roll angles in degrees
+        
+        
+        Notes
+        -----
+        I guess this function is based on the equations described in 
+        Kwon3d (http://www.kwon3d.com/theory/dlt/dlt.html#3d).
+                
+        The transformation matrix T -
+        
+        
+        
+        ''' 
+        D = (1/(coefs[8]**2+coefs[9]**2+coefs[10]**2))**0.5;
+        #D = D[0]; # + solution
+        
+        Uo=(D**2)*(coefs[0]*coefs[8]+coefs[1]*coefs[9]+coefs[2]*coefs[10]);
+        Vo=(D**2)*(coefs[4]*coefs[8]+coefs[5]*coefs[9]+coefs[6]*coefs[10]);
+        print(f'D: {D}, Uo: {Uo}, Vo:{Vo}')
+        du = (((Uo*coefs[8]-coefs[0])**2 + (Uo*coefs[9]-coefs[1])**2 + (Uo*coefs[10]-coefs[2])**2)*D**2)**0.5;
+        dv = (((Vo*coefs[8]-coefs[4])**2 + (Vo*coefs[9]-coefs[5])**2 + (Vo*coefs[10]-coefs[6])**2)*D**2)**0.5;
+        
+        #du = du[0]; # + values
+        #dv = dv[0]; 
+        Z = -1*np.mean([du,dv]) # there should be only a tiny difference between du & dv
+        
+        row1 = [(Uo*coefs[8]-coefs[0])/du ,(Uo*coefs[9]-coefs[1])/du ,(Uo*coefs[10]-coefs[2])/du]
+        row2 = [(Vo*coefs[8]-coefs[4])/dv ,(Vo*coefs[9]-coefs[5])/dv ,(Vo*coefs[10]-coefs[6])/dv] 
+        row3 = [coefs[8] , coefs[9], coefs[10]]
+        T3 = D*np.array([row1,
+                        row2,
+                        row3])
+
+        dT3 = np.linalg.det(T3);
+        
+        if dT3 < 0:
+            T3=-1*T3;
+        
+        xyz = cam_centre_from_dlt(coefs)
+        
+        T = np.zeros((4,4))
+        T[:3,:3] = np.linalg.inv(T3);
+        T[3,:]= [xyz[0], xyz[1], xyz[2], 1]
+        
+            
+        # % compute YPR from T3
+        # %
+        # % Note that the axes of the DLT based transformation matrix are rarely
+        # % orthogonal, so these angles are only an approximation of the correct
+        # % transformation matrix
+        # %  - Addendum: the nonlinear constraint used in mdlt_computeCoefficients below ensures the
+        # %  orthogonality of the transformation matrix axes, so no problem here
+        alpha = np.arctan2(T[1,0],T[0,0])
+        beta = np.arctan2(-T[2,0], (T[2,1]**2+T[2,2]**2)**0.5)
+        gamma = np.arctan2(T[2,1],T[2,2])
+        
+        ypr = np.rad2deg([gamma,beta,alpha]);
+
+        return T, Z, ypr
+
+    def make_rotation_mat_fromworld(Rc, C):
+        '''
+        Parameters
+        ----------
+        Rc : 3x3 np.array
+            Rotation matrix wrt the world coordinate system
+        C : (1,3) or (3,) np.array
+            Camera XYZ in world coordinate system
+        Returns
+        -------
+        camera_rotation: 4x4 np.array
+            The final camera rotation and translation matrix which 
+            converts the world point to the camera point
+        
+        References
+        ----------
+        * Simek, Kyle, https://ksimek.github.io/2012/08/22/extrinsic/ (blog post) accessed 14/2/2022
+        
+        Example
+        -------
+        
+        > import track2trajectory.synthetic_data as syndata
+        > Rc, C = ..... # load and define the world system camera rotations and camera centre
+        > rotation_mat = make_rotation_mat_fromworld(Rc, C)
+        '''
+        camera_rotation = np.zeros((4,4))
+        camera_rotation[:3,:3] = Rc.T
+        camera_rotation[:3,-1] = -np.matmul(Rc.T,C)
+        camera_rotation[-1,-1] = 1 
+        return camera_rotation
+
+    #print(P_my.flatten()[:-1])
+    coefs = wand.coefs[:,i]
+    camera_pose_T , _, _ = transformation_matrix_from_dlt(coefs)
+    shifter_mat = np.row_stack(([1,0,0,0],
+                                [0,1,0,0],
+                                [0,0,-1,0],
+                                [0,0,0,1]))
+
+    #print(camera_pose_T)
+
+    shifted_rotmat = np.matmul(camera_pose_T, shifter_mat)[:3,:3]
+    extrinsic_matrix = make_rotation_mat_fromworld(shifted_rotmat, camera_pose_T[-1,:3])
+
+    print(extrinsic_matrix)
+    K = extractIntrinsics(i, wand)
+    P = K @ extrinsic_matrix[:3,:]
+    P
 
     return P
