@@ -160,7 +160,7 @@ def extractProjection(i, wand):
         
         Uo=(D**2)*(coefs[0]*coefs[8]+coefs[1]*coefs[9]+coefs[2]*coefs[10]);
         Vo=(D**2)*(coefs[4]*coefs[8]+coefs[5]*coefs[9]+coefs[6]*coefs[10]);
-        print(f'D: {D}, Uo: {Uo}, Vo:{Vo}')
+        #print(f'D: {D}, Uo: {Uo}, Vo:{Vo}')
         du = (((Uo*coefs[8]-coefs[0])**2 + (Uo*coefs[9]-coefs[1])**2 + (Uo*coefs[10]-coefs[2])**2)*D**2)**0.5;
         dv = (((Vo*coefs[8]-coefs[4])**2 + (Vo*coefs[9]-coefs[5])**2 + (Vo*coefs[10]-coefs[6])**2)*D**2)**0.5;
         
@@ -242,11 +242,13 @@ def extractProjection(i, wand):
                                 [0,0,0,1]))
 
     #print(camera_pose_T)
-
     shifted_rotmat = np.matmul(camera_pose_T, shifter_mat)[:3,:3]
     extrinsic_matrix = make_rotation_mat_fromworld(shifted_rotmat, camera_pose_T[-1,:3])
 
-    print(extrinsic_matrix)
+
+    extrinsic_matrix = (np.array([[1,0,0],[0,-1,0],[0,0,1]]) @ extrinsic_matrix[:3,:])
+
+    #print(extrinsic_matrix)
     K = extractIntrinsics(i, wand)
     P = K @ extrinsic_matrix[:3,:]
     P
