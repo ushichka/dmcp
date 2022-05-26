@@ -120,7 +120,7 @@ class Experiment:
 
 # METHODS
 
-    def exec_dmcp(self, step=None):
+    def exec_dmcp(self, step=None,znear=0.1, zfar=100000):
 
         imIm = self.load_imIm()
         imK = self.load_imK()
@@ -130,13 +130,18 @@ class Experiment:
         #    raise ArgumentError(f"directory '{self.exp_dir}' not valid expected at least imIm imK and imP to be present.")
 
         print("reading mesh")
-        ovMesh = pr.Mesh.from_trimesh(tr.load_mesh(self.mesh_path))
+        trmesh = tr.load_mesh(self.mesh_path)
+        #print(type(trmesh))
+        if type(trmesh) == tr.points.PointCloud:
+            ovMesh = pr.Mesh.from_points(points=trmesh.vertices,colors = trmesh.colors)
+        else:
+            ovMesh = pr.Mesh.from_trimesh(trmesh)
 
 
         #%% dmcp workflow
         #%% generate depth map
         print("generating depth map")
-        dmIm, dmK, dmP = generate_depth_map(ovMesh,imK,znear=0.00001,zfar=100)
+        dmIm, dmK, dmP = generate_depth_map(ovMesh,imK,znear=znear,zfar=zfar)
 
         #%% annotate points
         print("annotate points")
@@ -180,11 +185,11 @@ class Experiment:
         position_est = pose_est[:3].flatten()
         print(position_est)
 
-        sv_pos_est = pv.Sphere(radius=0.25, center=position_est)
+        sv_pos_est = pv.Sphere(radius=2500, center=position_est)
         pvMesh = pv.read(self.mesh_path)
         pvPts = pv.PolyData(pts_world)
         pl = pv.Plotter(notebook=False)
-        pl.add_mesh(pvMesh, color="dimgrey")
+        pl.add_mesh(pvMesh, rgb=True,scalars="RGB",point_size=1)
         pl.add_mesh(pvPts, color="green", render_points_as_spheres=True,point_size=25)
         pl.add_mesh(sv_pos_est, color="blue")
         pl.show()
@@ -267,7 +272,7 @@ class Experiment:
 
 @click.command()
 @click.argument("expdir", type=click.Path(exists=True),required=False)
-@click.option("--mesh", type=click.Path(exists=True),required=True)
+@click.option("--mesh", type=click.Path(exists=True),required=True,envvar="MESH")
 @click.option('--repr', 'show', flag_value='repr')
 @click.option('--pose', 'show', flag_value='pose')
 def cli(expdir, mesh, show):
@@ -281,4 +286,4 @@ def cli(expdir, mesh, show):
         exp.visualize_3D()
         
 if __name__ == "__main__":
-    cli()
+    cli(auto_envvar_prefix="DMCP")
