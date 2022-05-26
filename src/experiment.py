@@ -185,7 +185,7 @@ class Experiment:
         position_est = pose_est[:3].flatten()
         print(position_est)
 
-        sv_pos_est = pv.Sphere(radius=2500, center=position_est)
+        sv_pos_est = pv.Sphere(radius=250, center=position_est)
         pvMesh = pv.read(self.mesh_path)
         pvPts = pv.PolyData(pts_world)
         pl = pv.Plotter(notebook=False)

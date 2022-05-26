@@ -151,6 +151,9 @@ def experiment(scene, out, mesh):
 
     exp.exec_dmcp()
 
+    exp.compute_reprojection_error()
+    plt.show()
+
 
 if __name__ == "__main__":
     cli(auto_envvar_prefix="DMCP")
