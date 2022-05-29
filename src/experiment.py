@@ -261,7 +261,7 @@ class Experiment:
         plt.scatter(cps[:,0], cps[:,1],marker="o", c="green", label="original annotation")
         plt.scatter(projs[:,0],projs[:,1], marker="x", c="red", label="backprojected annotation")
         plt.axis('off')
-        plt.savefig(self.path_reprScatter,bbox_inches="tight",dpi=150)
+        plt.savefig(self.path_reprScatter,bbox_inches="tight", pad_inches=0,dpi=150)
 
         ## Bar
         plt.figure()
