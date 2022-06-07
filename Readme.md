@@ -53,7 +53,7 @@ You can read calibration data (intrinsics _K_ and projection matrix _P_) for eac
 
 Example:
 ```python
-from pyushichka import loadCalibration
+from src.pyushichka import loadCalibration
 cam = 1 # second camera
 K, P = loadCalibration(cam, "data/ushichka/2018-08-18") # 2018-08-18 is the recording of a specific night
 ```
