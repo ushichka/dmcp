@@ -9,7 +9,7 @@ for the annotation script to work a sensible matplotlib backend should additiona
 
 The python code should then be installed as module ```src```.
 
-For imageio to read pfm files, the respective module might need to be downloaded separately.
+For imageio to read pfm files, the respective plugin might be needed to be downloaded separately.
 
 ## Directory Structure
  - demo: contains example data from ushichka dataset.
