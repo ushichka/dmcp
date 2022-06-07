@@ -20,6 +20,12 @@ from src.dmcpworkflow.annotate_points import annotate
 from src.pycv.dmcp import dm_to_world
 from src.pycv.dmcp import dmcp
 
+def loadtxt_safe(path,delimiter=","):
+    try:
+        return np.loadtxt(path, delimiter=delimiter)
+    except Exception as e:
+        print(f"cannot read {path}\n{e}")
+        return None
 
 class Experiment:
 
@@ -48,14 +54,14 @@ class Experiment:
 
 # DEPTH MAP IO
     def load_dmIm(self):
-            dmIm = np.loadtxt(self.path_dmIm, delimiter=",")
+            dmIm = loadtxt_safe(self.path_dmIm, delimiter=",")
             return dmIm
     def load_dmK(self):
-        dmK = np.loadtxt(self.path_dmK, delimiter=",")
+        dmK = loadtxt_safe(self.path_dmK, delimiter=",")
         return dmK
 
     def load_dmP(self):
-        dmP = np.loadtxt(self.path_dmP, delimiter=",")
+        dmP = loadtxt_safe(self.path_dmP, delimiter=",")
         return dmP
 
     def save_dmIm(self,dmIm: np.ndarray):
@@ -71,15 +77,15 @@ class Experiment:
         return dmP
 # IMAGE IO
     def load_imIm(self):
-        imIm = np.loadtxt(self.path_imIm, delimiter=",")
+        imIm = loadtxt_safe(self.path_imIm, delimiter=",")
         return imIm
 
     def load_imK(self):
-        imK = np.loadtxt(self.path_imK, delimiter=",")
+        imK = loadtxt_safe(self.path_imK, delimiter=",")
         return imK
 
     def load_imP(self):
-        imP = np.loadtxt(self.path_imP, delimiter=",")
+        imP = loadtxt_safe(self.path_imP, delimiter=",")
         return imP
 
     def save_imIm(self, imIm : np.ndarray):
@@ -97,7 +103,7 @@ class Experiment:
 # CPS IO
 
     def load_cps(self):
-        cps = np.loadtxt(self.path_cps, delimiter=",")
+        cps = loadtxt_safe(self.path_cps, delimiter=",")
         return cps
 
     def save_cps(self, cps: np.ndarray):
@@ -111,7 +117,7 @@ class Experiment:
 
 # Transform IO
     def load_transform(self):
-        transform = np.loadtxt(self.path_transform, delimiter=",")
+        transform = loadtxt_safe(self.path_transform, delimiter=",")
         return transform
 
     def save_transform(self,transform: np.ndarray):
@@ -185,12 +191,15 @@ class Experiment:
         position_est = pose_est[:3].flatten()
         print(position_est)
 
-        sv_pos_est = pv.Sphere(radius=250, center=position_est)
+        sv_pos_est = pv.Sphere(radius=1, center=position_est)
         pvMesh = pv.read(self.mesh_path)
         pvPts = pv.PolyData(pts_world)
         pl = pv.Plotter(notebook=False)
-        pl.add_mesh(pvMesh, rgb=True,scalars="RGB",point_size=1)
-        pl.add_mesh(pvPts, color="green", render_points_as_spheres=True,point_size=25)
+        try:
+            pl.add_mesh(pvMesh, rgb=True,scalars="RGB")
+        except:
+            pl.add_mesh(pvMesh)
+        pl.add_mesh(pvPts, color="green", render_points_as_spheres=True,point_size=1)
         pl.add_mesh(sv_pos_est, color="blue")
         pl.show()
 
@@ -199,13 +208,15 @@ class Experiment:
         imScatter = iio.imread(self.path_reprScatter)
         imBar = iio.imread(self.path_reprBar)
 
-        plt.figure(567)
+
+        plt.figure(f"reprojection errors {self.exp_dir}")
         plt.subplot(1,2,1)
         plt.imshow(imScatter,origin="upper")
         plt.subplot(1,2,2)
         plt.imshow(imBar,origin="upper")
         plt.axis("off")
         plt.show(block=block)
+        plt.close()
 
     def compute_reprojection_error(self):
         dmIm = self.load_dmIm()
@@ -262,6 +273,7 @@ class Experiment:
         plt.scatter(projs[:,0],projs[:,1], marker="x", c="red", label="backprojected annotation")
         plt.axis('off')
         plt.savefig(self.path_reprScatter,bbox_inches="tight", pad_inches=0,dpi=150)
+        plt.close()
 
         ## Bar
         plt.figure()
@@ -269,21 +281,28 @@ class Experiment:
         #plt.legend(loc="upper right")
         plt.axis("image")
         plt.savefig(self.path_reprBar, bbox_inches="tight",dpi=150)
+        plt.close()
 
 @click.command()
 @click.argument("expdir", type=click.Path(exists=True),required=False)
 @click.option("--mesh", type=click.Path(exists=True),required=True,envvar="MESH")
-@click.option('--repr', 'show', flag_value='repr')
-@click.option('--pose', 'show', flag_value='pose')
-def cli(expdir, mesh, show):
+@click.option('--repr', 'action', flag_value='repr')
+@click.option('--pose', 'action', flag_value='pose')
+@click.option('--exec', 'action', flag_value='exec')
+def cli(expdir, mesh, action):
     if expdir == None:
         expdir = os.getcwd()
 
+    print(f"experiment {expdir}")
     exp = Experiment(expdir, mesh)
-    if show == "repr":
+    #print(f"action {action}")
+    if action == "repr":
+        exp.compute_reprojection_error()
         exp.visualize_reprojection(True)
-    if show == "pose":
+    if action == "pose":
         exp.visualize_3D()
+    if action == "exec":
+        exp.exec_dmcp()
         
 if __name__ == "__main__":
     cli(auto_envvar_prefix="DMCP")
