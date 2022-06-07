@@ -24,6 +24,8 @@ For imageio to read pfm files, the respective plugin might be needed to be downl
 ## Experiments
 ### Executing a DMCP Experiment
 
+The experiment script assumes a native image _imIm.csv_, camera intrinsics _imK.csv_ and pinhole projection matrix _imP.csv_ to be present in an experiment directory.
+
 ```bash
 export MESH=[MESHPATH] # alternative to providing mesh as cli-option
 python src/experiment.py [path to experiment] --exec # view result using --repr and --pose
@@ -55,3 +57,6 @@ from pyushichka import loadCalibration
 cam = 1 # second camera
 K, P = loadCalibration(cam, "data/ushichka/2018-08-18") # 2018-08-18 is the recording of a specific night
 ```
+
+## Notes:
+ - Matrices are assumed to have conventions as used by opencv. DMCP will not work if conventions do not match.
