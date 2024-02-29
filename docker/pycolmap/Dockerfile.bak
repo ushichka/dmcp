@@ -1,0 +1,58 @@
+FROM nvidia/cudagl:11.1-devel-ubuntu18.04
+ARG PYTHON_VERSION=3.8
+
+# Prevent stop building ubuntu at time zone selection.
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN ls /etc/apt/sources.list.d/
+RUN rm /etc/apt/sources.list.d/cuda.list
+RUN rm /etc/apt/sources.list.d/nvidia-ml.list
+RUN apt-get update -y
+RUN apt-get install -y unzip wget software-properties-common git
+
+RUN apt-get install -y python3 python3-pip
+
+ENV CMAKE_CUDA_ARCHITECTURES=native
+
+RUN git clone -b 3.9.1 https://github.com/colmap/colmap && apt-get install -y \
+    git \
+    cmake \
+    ninja-build \
+    build-essential \
+    libboost-program-options-dev \
+    libboost-filesystem-dev \
+    libboost-graph-dev \
+    libboost-system-dev \
+    libeigen3-dev \
+    libflann-dev \
+    libfreeimage-dev \
+    libmetis-dev \
+    libgoogle-glog-dev \
+    libgtest-dev \
+    libsqlite3-dev \
+    libglew-dev \
+    qtbase5-dev \
+    libqt5opengl5-dev \
+    libcgal-dev \
+    libceres-dev
+
+RUN apt-get install -y curl && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list && apt-get update -y
+
+RUN apt-get install -y nvidia-container-toolkit
+
+RUN apt-get install -y \
+    nvidia-cuda-toolkit
+
+RUN cd colmap && mkdir build && cd build && cmake .. -GNinja -DCMAKE_CUDA_ARCHITECTURES="all-major" && ninja && ninja install && colmap -h 
+
+RUN git clone -b v0.6.0 https://github.com/colmap/pycolmap.git && cd pycolmap && python3 -m pip install .
+
+#RUN pip install --upgrade pip
+#RUN git clone --recursive https://github.com/cvg/Hierarchical-Localization/ && cd Hierarchical-Localization/ && python -m pip install -e .
+
+
+#RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+#RUN pip install jupyter
