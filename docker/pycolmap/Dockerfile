@@ -1,10 +1,7 @@
 FROM nvidia/cuda:12.3.2-devel-ubuntu22.04
 ARG DEBIAN_FRONTEND=non-interactive
 
-# ------------------------------------------------------------------
-# update & requirements
-# ------------------------------------------------------------------
-
+#  -------------- requirements ---------------
 RUN apt-get update && apt-get install -y \
     git \
     cmake \
@@ -27,11 +24,12 @@ RUN apt-get update && apt-get install -y \
     libcgal-dev \
     libcgal-qt5-dev\
     libatlas-base-dev \
-    libsuitesparse-dev
+    libsuitesparse-dev \
+    libflann-dev \ 
+    libsqlite3-dev \
+    libmetis-dev
 
-# ------------------------------------------------------------------
-# ceres
-# ------------------------------------------------------------------
+# ---------------- ceres --------------------
 
 RUN git clone https://ceres-solver.googlesource.com/ceres-solver \
     /software/ceres && \
@@ -43,13 +41,8 @@ RUN git clone https://ceres-solver.googlesource.com/ceres-solver \
     make install  && \
     make clean
 
-# ------------------------------------------------------------------
-# colmap
-# ------------------------------------------------------------------
 
-# other requirements
-RUN apt-get -y install libflann-dev libsqlite3-dev libmetis-dev
-
+# ------------------ colmap ---------------
 
 # originally checkout 3.9.1 but that contains file with missing memory include and is not patched 
 RUN git clone https://github.com/colmap/colmap.git \
@@ -63,11 +56,15 @@ RUN git clone https://github.com/colmap/colmap.git \
     make install  && \
     make clean
 
-# ------------------------------------------------------------------
-# cleanup
-# ------------------------------------------------------------------
 
+# ------------ pycolmap --------------
+RUN apt-get -y install python3-pip
+RUN cd /software/colmap/pycolmap/ && python3 -m pip install .
+
+# ----------- jupyter ---------------
+RUN python3 -m pip install jupyter
+
+# ------------ finish ----------------
 RUN apt-get purge -y cmake && apt-get autoremove -y
-RUN rm -rf /software
-RUN mkdir /project
+RUN mkdir /workspace
 WORKDIR /
