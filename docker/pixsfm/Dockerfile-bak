@@ -1,0 +1,92 @@
+FROM nvidia/cuda:11.7.1-devel-ubuntu22.04
+ARG DEBIAN_FRONTEND=non-interactive
+
+#  -------------- requirements ---------------
+RUN apt-get update && apt-get install -y \
+    git \
+    cmake \
+    build-essential \
+    vim \
+    libboost-program-options-dev \
+    libboost-filesystem-dev \
+    libboost-graph-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-test-dev \
+    libeigen3-dev \
+    libsuitesparse-dev \
+    libfreeimage-dev \
+    libgoogle-glog-dev \
+    libgflags-dev \
+    libglew-dev \
+    qtbase5-dev \
+    libqt5opengl5-dev \
+    libcgal-dev \
+    libcgal-qt5-dev\
+    libatlas-base-dev \
+    libsuitesparse-dev \
+    libflann-dev \ 
+    libsqlite3-dev \
+    libmetis-dev
+
+# ---------------- ceres --------------------
+
+RUN git clone https://ceres-solver.googlesource.com/ceres-solver \
+    /software/ceres && \
+    cd /software/ceres && \
+    git checkout $(git describe --tags) && \
+    mkdir -p /software/ceres/build && cd /software/ceres/build && \
+    cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_CUDA_ARCHITECTURES="86" && \
+    make -j"$(nproc)" && \
+    make install  && \
+    make clean
+
+
+# ------------------ colmap ---------------
+
+# pixsfm needs 3.8
+RUN git clone https://github.com/colmap/colmap.git \
+    /software/colmap && \
+    cd /software/colmap && \
+    git checkout c84275e610b44945b5726ccf09fa1b4b89d66860 && \
+    mkdir build && \
+    cd build && \
+    cmake ..  -DCMAKE_CUDA_ARCHITECTURES="86" && \
+    make -j"$(nproc)" && \
+    make install  && \
+    make clean
+
+
+# ------------ pycolmap --------------
+RUN apt-get -y install python3-pip
+RUN cd /software/colmap/pycolmap/ && python3 -m pip install .
+
+# ----------- jupyter ---------------
+RUN python3 -m pip install jupyter
+
+#  -------------- requirements for pixsfm ---------------
+# general requirements
+RUN apt-get update && apt-get install -y \
+    git \
+    cmake \
+    build-essential \
+    vim \
+    libhdf5-dev
+
+# direct requirements
+RUN git clone --recurse-submodules https://github.com/cvg/pixel-perfect-sfm.git /software/pixsfm && \
+    cd /software/pixsfm
+
+# hloc
+RUN git clone -b v1.4 --recursive https://github.com/cvg/Hierarchical-Localization/ /software/hloc && \
+    cd /software/hloc \
+    pip install -e .
+
+# ---------------- install pixsfm --------------------
+
+RUN cd /software/pixsfm && git init && pip install -e .
+
+# ------------ finish ----------------
+RUN apt-get purge -y cmake && apt-get autoremove -y
+RUN mkdir -p /workspace
+WORKDIR /

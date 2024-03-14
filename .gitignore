@@ -8,3 +8,5 @@ INRIA_MUSIS.stl
 Manifest.toml
 tmp/
 src.egg-info
+.ipynb_checkpoints
+.venv

@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 name = "src"
 version = "0.1.1"
 dependencies = [
-
+"numpy",
+"scipy",
+"pyvista"
 ]
 requires-python = "==3.9.18"
 

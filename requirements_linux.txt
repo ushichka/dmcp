@@ -111,7 +111,6 @@ Send2Trash==1.8.0
 six==1.16.0
 sniffio==1.2.0
 soupsieve==2.3.2.post1
--e git+ssh://git@github.com/ushichka/dmcp.git@1d921017779dc1527947550099d6fcf91c4ce9cc#egg=src
 stack-data==0.2.0
 terminado==0.13.3
 threadpoolctl==3.1.0
