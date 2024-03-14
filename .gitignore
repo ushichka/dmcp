@@ -10,3 +10,4 @@ tmp/
 src.egg-info
 .ipynb_checkpoints
 .venv
+.Trash-*/

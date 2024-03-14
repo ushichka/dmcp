@@ -12,8 +12,56 @@ from scipy.io import loadmat
 import cv2
 import scipy.linalg as la
 import pathlib
+import requests
+from tqdm.auto import tqdm
+
+def download_raw(target_dir: pathlib.Path):
+    """ download complete ushichka data from "https://zenodo.org/api/records/6620671/files-archive"
+    
+        target_dir: directory to place downloaded files into (creates if not existing)
+    """
+    target_dir = pathlib.Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    url = "https://zenodo.org/api/records/6620671/files-archive"
+    # Streaming, so we can iterate over the response.
+    response = requests.get(url, stream=True)
+
+    # Sizes in bytes.
+    total_size = int(response.headers.get("content-length", 5153464980))
+    block_size = 1024
+
+    with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
+        with open(target_dir / "raw.zip", "wb") as file:
+            for data in response.iter_content(block_size):
+                progress_bar.update(len(data))
+                file.write(data)
+
+    if total_size != 0 and progress_bar.n != total_size:
+        raise RuntimeError(f"Could not download file total_size={total_size} progress_bar.n={progress_bar.n}")
+    
+    import zipfile
+    with zipfile.ZipFile(target_dir / "raw.zip", 'r') as zip_ref:
+        zip_ref.extractall(target_dir)
+
+    # Removing the raw zip file
+    os.remove(target_dir / "raw.zip")
+
+    # Recursively unzip other files in the directory
+    for root, _, files in os.walk(target_dir):
+        for file in files:
+            if file.endswith('.zip'):
+                zip_ref = zipfile.ZipFile(os.path.join(root, file), 'r')
+                zip_ref.extractall(root)
+                zip_ref.close()
+                os.remove(os.path.join(root, file))
+    
+
 
 def loadImage(camera,image, data_root):
+    """ load image from data in ushichka directory 
+        camera: number of camera (0-2)
+        image: number of image ()
+    """
     camera = int(camera) +1 # expect 0 indexed but K1/2/3 are 1 indexed
     path_images = data_root + os.sep + "image" + os.sep + "raw_images"+ os.sep
     path_img_list = list(Path(path_images).rglob(f"*K{camera}*512x640shape.csv"))
