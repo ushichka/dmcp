@@ -131,3 +131,4 @@ widgetsnbextension==3.6.0
 wslink==1.6.4
 yarl==1.7.2
 zipp==3.8.0
+scikit-image
