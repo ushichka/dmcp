@@ -36,7 +36,7 @@ RUN git clone https://ceres-solver.googlesource.com/ceres-solver \
     cd /software/ceres && \
     git checkout $(git describe --tags) && \
     mkdir -p /software/ceres/build && cd /software/ceres/build && \
-    cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_CUDA_ARCHITECTURES="86" && \
+    cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_CUDA_ARCHITECTURES="61" && \
     make -j"$(nproc)" && \
     make install  && \
     make clean
@@ -51,7 +51,7 @@ RUN git clone https://github.com/colmap/colmap.git \
     git checkout c0d8926 && \
     mkdir build && \
     cd build && \
-    cmake ..  -DCMAKE_CUDA_ARCHITECTURES="86" && \
+    cmake ..  -DCMAKE_CUDA_ARCHITECTURES="61" && \
     make -j"$(nproc)" && \
     make install  && \
     make clean
@@ -68,3 +68,16 @@ RUN python3 -m pip install jupyter
 RUN apt-get purge -y cmake && apt-get autoremove -y
 RUN mkdir /workspace
 WORKDIR /
+
+
+# ---cuda --- 
+# This should be handled by container toolkit ( and cdi support for podman)
+#RUN apt-get update 
+#RUN apt-get install -y wget
+#RUN apt-key del 7fa2af80 && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb &&  yes | dpkg -i cuda-keyring_1.1-1_all.deb
+##RUN apt-get update && apt-get -y install cuda-toolkit && apt-get -y install nvidia-gds
+#RUN apt-get update && \
+#    apt-get install -y software-properties-common && \
+#    rm -rf /var/lib/apt/lists/*
+#RUN add-apt-repository ppa:graphics-drivers/ppa
+#RUN apt-get install -y nvidia-driver cuda-toolkit cuda-drivers cuda

@@ -1,0 +1,1 @@
+podman run --rm -it --device nvidia.com/gpu=all --security-opt=label=disable -v $(pwd):/workspace:rw -p 8888:8888 --shm-size=8g -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix:0 -v /dev/snd:/dev/snd --privileged local/colmap colmap gui
