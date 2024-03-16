@@ -5,6 +5,78 @@ import scipy.linalg as la
 import cv2
 from itertools import combinations
 
+def triangulate(correspondences, projection_matrices):
+    """
+    Triangulate 3D points from correspondences and perspective projection matrices.
+    
+    Args:
+    - correspondences: A list of 2D image coordinates (N_camera x N_corresponcence x 2 np.array) for each correspondence.
+    - projection_matrices: A list of 3x4 projection matrices for each camera.
+    
+    Returns:
+    - points_3d: A Nx3 array containing the triangulated 3D points.
+    """
+    num_correspondences = correspondences.shape[1]
+    num_cameras = len(projection_matrices)
+    
+    assert num_correspondences > 0, "No correspondences provided"
+    assert num_cameras > 1, "At least two cameras are required"
+    assert correspondences.shape[0] == num_cameras, "Number of correspondence cameras should match number of cameras"
+    
+    # Initialize array to store triangulated 3D points
+    points_3d = np.zeros((num_correspondences, 3))
+
+    for i in range(num_correspondences):
+        A = np.zeros((2 * num_cameras, 4))
+        for j in range(num_cameras):
+            # Construct matrix A for each camera
+            x, y = correspondences[j][i]
+            P = projection_matrices[j]
+            A[2*j] = x * P[2] - P[0]
+            A[2*j + 1] = y * P[2] - P[1]
+        
+        # Solve the system of equations using SVD
+        _, _, V = np.linalg.svd(A)
+        point_homogeneous = V[-1] / V[-1, -1]
+        points_3d[i] = point_homogeneous[:-1]  # Remove the homogeneous coordinate
+    
+    return points_3d
+
+
+
+def compute_fundamental_matrix(P1, P2):
+    def extract_translation_rotation(P):
+        # Extract translation vector
+        T = P[:, 3]
+        
+        # Extract rotation matrix
+        R = P[:, :3]
+        
+        return T, R
+
+    def skew_symmetric_matrix(T):
+        return np.array([
+            [0, -T[2], T[1]],
+            [T[2], 0, -T[0]],
+            [-T[1], T[0], 0]
+        ])
+    # Extract translation and rotation from projection matrices
+    T1, R1 = extract_translation_rotation(P1)
+    T2, R2 = extract_translation_rotation(P2)
+    
+    # Compute cross-product matrices
+    Tx1 = skew_symmetric_matrix(T1)
+    Tx2 = skew_symmetric_matrix(T2)
+    
+    # Compute inverse and transpose of intrinsic calibration matrices
+    K1_inv = np.linalg.inv(P1[:, :3])
+    K2_inv_T = np.linalg.inv(P2[:, :3]).T
+    
+    # Compute fundamental matrix
+    F = Tx2.dot(R2).dot(K2_inv_T).dot(K1_inv).dot(R1.T).dot(Tx1)
+    
+    return F
+
 def solve_PnP(world, native, K, distCoeffs = np.array([[0, 0, 0, 0]]).astype("float32")):
 
     # solveAP3P for all 3-combinations

@@ -30,6 +30,12 @@ def loadtxt_safe(path,delimiter=","):
 class Experiment:
 
     def __init__(self, dir,mesh_path) -> None:
+        """
+            workspace directory to load and store dmcp data
+            Expects dmIm.csv, dmK.csv and dmP.csv containing a reference image with respective intrinsics and perspective projection matrix.
+
+            (Without calibration, P = KE, where E=[R|T] is the extrinsic camera matrix can be ignored by setting E to the identity)
+        """
         self.mesh_path = mesh_path
         self.exp_dir = dir
 
