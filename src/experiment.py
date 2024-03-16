@@ -32,7 +32,7 @@ class Experiment:
     def __init__(self, dir,mesh_path) -> None:
         """
             workspace directory to load and store dmcp data
-            Expects dmIm.csv, dmK.csv and dmP.csv containing a reference image with respective intrinsics and perspective projection matrix.
+            Expects dmIm.csv, dmK.csv and dmP.csv before exec_dmcp containing a reference image with respective intrinsics and perspective projection matrix.
 
             (Without calibration, P = KE, where E=[R|T] is the extrinsic camera matrix can be ignored by setting E to the identity)
         """
@@ -133,6 +133,10 @@ class Experiment:
 # METHODS
 
     def exec_dmcp(self, step=None,znear=0.1, zfar=100000):
+        """combines everything needed for dmcp
+        
+            execute mpl.use("TKAgg") to enforce interactive usage even in notebook scenarios
+        """
 
         imIm = self.load_imIm()
         imK = self.load_imK()
@@ -168,7 +172,7 @@ class Experiment:
         #%% dmcp step
         print("executing sparse correspondence alignment (SCA)")
 
-        _raw_pose, trans = dmcp(imK, imP, cps[:,:2], pts_world,return_raw_pose=True)
+        _raw_pose, trans = dmcp(imK, imP, cps[:,:2], pts_world, return_raw_pose=True)
         print(f"transformation\n{trans}")
         
         #%% save data
