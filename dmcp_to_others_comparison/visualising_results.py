@@ -32,9 +32,11 @@ for method, subdf in by_method:
 plt.figure()
 plt.violinplot(distances)
 plt.xticks(range(1,len(distances)+1),names)
-
+#%%
 median_predist = by_method.aggregate(np.nanmedian)['predist']
 
+for method, subdf in by_method:
+    print(f'method: {method}, 95%ile error range - preicp: {np.percentile(subdf["predist"], [2.5,97.5])}' )
 
 #%%
 plt.figure(figsize=(7,3))	
